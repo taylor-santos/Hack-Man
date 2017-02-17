@@ -6,7 +6,6 @@
 #include <ctime>
 #include <queue>
 #include <climits>
-//#include <fstream>
 
 using namespace std;
 
@@ -36,12 +35,10 @@ public:
 	}
 };
 
-vector<vector<Cell*>*> grid;
-//ofstream cerr;
+vector<vector<Cell*>*> grid;	//A width x height 2D vector of Cell 
 
 int width;
 int height;
-vector<vector<int> > is_wall;
 int timebank;
 int time_per_move;
 int time_remaining;
@@ -54,6 +51,10 @@ vector<Cell*> weapons;
 vector<Cell*> bugs;
 
 void do_move();
+int is_adjacent(Point, Point);
+void clear_grid();
+void make_grid();
+vector<Cell*> getAdjacentCells(Point pt);	// Returns a vector of all the playable cells next to Point pt
 
 int is_adjacent(Point a, Point b){
 	/*
@@ -63,7 +64,6 @@ int is_adjacent(Point a, Point b){
 	    2=down
 	    3=left	
 	*/
-	
 	if (a.x == b.x){
 		if (a.y-b.y == 1)
 			return 0;
@@ -79,13 +79,13 @@ int is_adjacent(Point a, Point b){
 }
 
 void clear_grid(){
-	for (int x=0; x<20; ++x){		
+	for (int x=0; x<20; ++x){
 		for (int y=0; y<14; ++y){
 			delete (*grid[x])[y];
 		}
 		delete grid[x];
 	}
-	grid.clear();	
+	grid.clear();
 }
 
 void make_grid(){
@@ -97,8 +97,10 @@ void make_grid(){
 	}
 }
 
-vector<Cell*> getAdjacentCells(int x, int y){
+vector<Cell*> getAdjacentCells(Point pt){
 	vector<Cell*> adjacent;
+	int x = pt.x;
+	int y = pt.y;
 	if (y > 0  && !(*grid[x])[y-1]->is_wall())
 		adjacent.push_back((*grid[x])[y-1]);
 	if (y < 13 && !(*grid[x])[y+1]->is_wall())
@@ -134,16 +136,8 @@ vector<Cell*> shortestPath(Point start, Point end, bool print){
 			}
 		}
 		unvisited.erase(unvisited.begin() + index);
-		vector<Cell*> neighbors = getAdjacentCells(curr->x, curr->y);
+		vector<Cell*> neighbors = getAdjacentCells((Point)(*curr));
 		for (int i=0; i<(int)neighbors.size(); ++i){
-			/*
-			if (curr->x == start.x && curr->y == start.y){
-				if (find(possibleBugs.begin(), possibleBugs.end(), neighbors[i]) != possibleBugs.end()){
-					cerr << "ADJACENT BUG!!!" << endl;
-					continue;
-				}		
-			}
-			*/
 			int alt = dist[curr->x][curr->y] + 1;
 			if (alt < dist[neighbors[i]->x][neighbors[i]->y]){
 				dist[neighbors[i]->x][neighbors[i]->y] = alt;
@@ -237,10 +231,6 @@ void process_next_command() {
 			snippets.clear();
 			weapons.clear();
 			bugs.clear();
-			is_wall.clear();
-			for (int x = 0; x < width; x++) {
-				is_wall.push_back(vector<int>(height));
-			}
 			string s;
 			cin >> s;
 			int n = s.length();
@@ -257,7 +247,6 @@ void process_next_command() {
 						}
 						char c = s[i++];
 						if (c == 'x') {
-							is_wall[x][y] = 1;
 							(*grid[x])[y]->set_wall(true);
 						}
 						else if (c == '.') {
@@ -331,7 +320,6 @@ void process_next_command() {
 int main() {
 	srand((int)time(0));
 	make_grid();
-	//cerr.open("test123.txt");
 	while (true) {
 		process_next_command();
 	}
@@ -349,19 +337,7 @@ string moves[4] = { "up", "left", "down", "right" };
 
 void do_move() {
 	cerr << "MOVE " << current_round << ":"<< endl;
-	vector<string> valid_moves;
-	for (int dir = 0; dir < 4; dir++) {
-		int nextx = me.x + dx[dir];
-		int nexty = me.y + dy[dir];
-		if (nextx >= 0 && nextx < height && nexty >= 0 && nexty < width) {
-			if (!is_wall[nextx][nexty]) {
-				valid_moves.push_back(moves[dir]);
-			}
-		}
-	}
-	if (valid_moves.size() == 0) {
-		valid_moves.push_back("pass");
-	}
+
 	if (snippets.size() == 0){
 		cout << "pass" << endl;
 		cerr << "No snippets on field, passing." << endl;
