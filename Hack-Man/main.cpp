@@ -6,6 +6,8 @@
 #include <ctime>
 #include <queue>
 #include <climits>
+#include <assert.h>
+#include "paths.h"
 
 using namespace std;
 
@@ -175,99 +177,20 @@ vector<Point> getAdjacentCells(Grid* grid, Point pt){
 		adjacent.push_back((Point)(*grid->cells[x + 1][y]));
 	return adjacent;
 }
-/*
-vector<Point> shortestPath(Point start, Point end, Grid* grid, bool bugPath) {
-	queue<Point> start_Q;
-	queue<Grid*> grid_Q;
-	queue<vector<Point>> path_Q;
-	start_Q.push(start);
-	Grid* gridCopy = grid->copy();
-	if (bugPath)
-		gridCopy->make_bugpath();
-	grid_Q.push(gridCopy);
-	path_Q.push(vector<Point>());
-	while (start_Q.size() > 0) {
-		Point curr_start = start_Q.front();
-		start_Q.pop();
-		Grid* curr_grid = grid_Q.front();
-		grid_Q.pop();
-		vector<Point> curr_path = path_Q.front();
-		path_Q.pop();
-		curr_path.push_back(curr_start);
-		if (curr_start == end) {
-			while (start_Q.size() > 0) {
-				start_Q.pop();
-				delete grid_Q.front();
-				grid_Q.pop();
-				path_Q.pop();
-			}
-			delete curr_grid;
-			return curr_path;
-		}
 
-		Grid* newGrid = curr_grid->copy();
-		newGrid->cells[curr_start.x][curr_start.y]->set_wall(true);
-		newGrid->wallCount++;
-
-		vector<Point> neighbors = getAdjacentCells(curr_grid, curr_start);
-		for (int i = 0; i < neighbors.size(); ++i) {
-			start_Q.push(neighbors[i]);
-			grid_Q.push(newGrid->copy());
-			path_Q.push(curr_path);
-		}
-		delete newGrid;
-		delete curr_grid;
-	}
-	return vector<Point>();
-}
-*/
-vector<Point> shortestPath(Point start, Point end, Grid* grid, bool bugPath) {
-	int dist[20][14];
-	Cell* prev[20][14];
-	vector<Cell*> unvisited;
-	Grid* gridCopy = grid->copy();
-	if (bugPath)
-		gridCopy->make_bugpath();
-	for (int x = 0; x<20; ++x) {
-		for (int y = 0; y<14; ++y) {
-			unvisited.push_back(gridCopy->cells[x][y]);
-			dist[x][y] = INT_MAX;
-		}
-	}
-	dist[start.x][start.y] = 0;
-	while (find(unvisited.begin(), unvisited.end(), gridCopy->cells[end.x][end.y]) != unvisited.end()) {
-		Cell* curr = NULL;
-		int minDist = INT_MAX;
-		int index = -1;
-		for (int i = 0; i<(int)unvisited.size(); ++i) {
-			if (dist[unvisited[i]->x][unvisited[i]->y] < minDist) {
-				minDist = dist[unvisited[i]->x][unvisited[i]->y];
-				curr = unvisited[i];
-				index = i;
-			}
-		}
-		unvisited.erase(unvisited.begin() + index);
-		vector<Point> neighbors = getAdjacentCells(gridCopy, (Point)(*curr));
-		for (int i = 0; i<(int)neighbors.size(); ++i) {
-			int alt = dist[curr->x][curr->y] + 1;
-			if (alt < dist[neighbors[i].x][neighbors[i].y]) {
-				dist[neighbors[i].x][neighbors[i].y] = alt;
-				prev[neighbors[i].x][neighbors[i].y] = curr;
-			}
-		}
-	}
-	
-	vector<Point> path;
-	Point curr = end;
-	while (curr != start) {
-		path.push_back(curr);
-		curr = (Point)*prev[curr.x][curr.y];
-	}
-	reverse(path.begin(), path.end());
-	return path;
+Point offsetPoint(Point pt, int offset) {
+	if (offset == -1)
+		return pt;
+	assert(offset >= 0 && offset < 4);
+	int dx[4] = { 0,1,0,-1 };
+	int dy[4] = { -1,0,1,0 };
+	Point newPoint;
+	newPoint.x = pt.x + dx[offset];
+	newPoint.y = pt.y + dy[offset];
+	return newPoint;
 }
 
-vector<Point> findClosestItem(Point start, Grid* grid) {
+vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 	if (grid->snippets.size() == 0 && grid->weapons.size() == 0)
 		return vector<Point>();
 	queue<Point> start_Q;
@@ -317,28 +240,36 @@ vector<Point> findClosestItem(Point start, Grid* grid) {
 			Point bugPos = (Point)*newGrid->bugs[i];
 			if (bugPos == curr_start)
 				return vector<Point>();
-			vector<Point> newPos = shortestPath(bugPos, curr_start, grid, true);
-			if (newPos.size() > 0) {
-				newGrid->bugs[i] = newGrid->cells[newPos[0].x][newPos[0].y];
-				vector<Point>::iterator it = find(neighbors.begin(), neighbors.end(), newPos[0]);
-				if (it != neighbors.end())
-					neighbors.erase(it);
-			}
+			vector<Point>::iterator it = find(neighbors.begin(), neighbors.end(), bugPos);
+			if (it != neighbors.end())
+				neighbors.erase(it);
+			int offset = paths[index[bugPos.x][bugPos.y]][index[curr_start.x][curr_start.y]];
+			Point newPos = offsetPoint(bugPos, offset);
+			newGrid->bugs[i] = newGrid->cells[newPos.x][newPos.y];
+			it = find(neighbors.begin(), neighbors.end(), newPos);
+			if (it != neighbors.end())
+				neighbors.erase(it);
 		}
 
-		vector<Point> enemyBestPath;
+		int bestDist = INT_MAX;
+		int bestOffset = -1;
+		int enemyIndex = index[curr_enemy.x][curr_enemy.y];
 		for (int i = 0; i < newGrid->snippets.size(); ++i) {
-			vector<Point> newPath = shortestPath(curr_enemy, (Point)*newGrid->snippets[i], grid, false);
-			if (enemyBestPath.size() == 0 || enemyBestPath.size() > newPath.size())
-				enemyBestPath = newPath;
+			int snipIndex = index[newGrid->snippets[i]->x][newGrid->snippets[i]->y];
+			if (path_lengths[enemyIndex][snipIndex] < bestDist) {
+				bestDist = path_lengths[enemyIndex][snipIndex];
+				bestOffset = paths[enemyIndex][snipIndex];
+			}
 		}
 		for (int i = 0; i < newGrid->weapons.size(); ++i) {
-			vector<Point> newPath = shortestPath(curr_enemy, (Point)*newGrid->weapons[i], grid, false);
-			if (enemyBestPath.size() == 0 || enemyBestPath.size() > newPath.size())
-				enemyBestPath = newPath;
+			int snipIndex = index[newGrid->weapons[i]->x][newGrid->weapons[i]->y];
+			if (path_lengths[enemyIndex][snipIndex] < bestDist) {
+				bestDist = path_lengths[enemyIndex][snipIndex];
+				bestOffset = paths[enemyIndex][snipIndex];
+			}
 		}
-		if (enemyBestPath.size() > 0)
-			curr_enemy = enemyBestPath[0];
+		if (bestOffset != -1)
+			curr_enemy = offsetPoint(curr_enemy, bestOffset);
 
 		vector<Cell*>::iterator snip_it = find(newGrid->snippets.begin(), newGrid->snippets.end(), newGrid->cells[curr_enemy.x][curr_enemy.y]);
 		if (snip_it != newGrid->snippets.end())
@@ -507,26 +438,336 @@ string moves[4] = { "up", "left", "down", "right" };
 
 
 void do_move(Grid* grid) {
+	
 	cerr << "MOVE " << current_round << ":" << endl;
-	vector<Point> bestPath = findClosestItem((Point)me, grid);
 	/*
+	int offset = -1;
+	int bestDist = INT_MAX;
+	Point chosenSnippet;
 	for (int i = 0; i < grid->snippets.size(); ++i) {
-		Point start = (Point)me;
-		Point end = (Point)(*grid->snippets[i]);
-		vector<Point> newPath = findBestPath(start, end, grid);
-		if (bestPath.size() == 0 || bestPath.size() > newPath.size())
-		{
-			bestPath = newPath;
+		int length = path_lengths[index[me.x][me.y]][index[grid->snippets[i]->x][grid->snippets[i]->y]];
+		cerr << "Snippet at (" << grid->snippets[i]->x << "," << grid->snippets[i]->y << ") is " << length << " units away." << endl;
+		if (length < bestDist) {
+			bestDist = length;
+			offset = paths[index[me.x][me.y]][index[grid->snippets[i]->x][grid->snippets[i]->y]];
+			chosenSnippet = (Point)*grid->snippets[i];
 		}
 	}
-	for (int i = 0; i < grid->weapons.size(); ++i) {
-		vector<Point> newPath = findBestPath((Point)me, (Point)(*grid->weapons[i]), grid);
-		if (bestPath.size() == 0 || bestPath.size() > newPath.size())
-		{
-			bestPath = newPath;
+	switch (offset) {
+	case 0:
+		cout << "up" << endl;
+		cerr << "up" << endl;
+		break;
+	case 1:
+		cout << "right" << endl;
+		cerr << "right" << endl;
+		break;
+	case 2:
+		cout << "down" << endl;
+		cerr << "down" << endl;
+		break;
+	case 3:
+		cout << "left" << endl;
+		cerr << "left" << endl;
+		break;
+	default:
+		cout << "pass" << endl;
+		cerr << "pass" << endl;
+		break;
+	}
+
+	for (int y = 0; y < 14; ++y) {
+		for (int x = 0; x < 20; ++x) {
+			if (find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]) != grid->bugs.end()) {
+				if (grid->cells[x][y]->is_wall())
+					cerr << "X";
+				else
+					cerr << " ";
+				cerr << "E";
+			}
+			else if (grid->cells[x][y]->is_wall())
+				cerr << "XX";
+			else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end()) {
+				if ((Point)*grid->cells[x][y] == chosenSnippet)
+					cerr << " S";
+				else
+					cerr << " s";
+			}
+			else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+				cerr << " W";
+			else if (me.x == x && me.y == y)
+				cerr << " " << me.id;
+			else if (enemy.x == x && enemy.y == y)
+				cerr << " " << enemy.id;
+			else
+				cerr << "  ";
 		}
+		cerr << endl;
 	}
 	*/
+	if (grid->snippets.size() == 0 && grid->weapons.size() == 0) {
+		cerr << "No items on board. Checking for adjacent bugs." << endl;
+		bool adjacentBugs[4] = { false, false, false, false };
+		bool adjacentBug = false;
+		for (int i = 0; i < grid->bugs.size(); ++i) {
+			if (path_lengths[index[grid->bugs[i]->x][grid->bugs[i]->y]][index[me.x][me.y]] < 3) {
+				cerr << "Bug is nearby, ";
+				int adjacent = is_adjacent((Point)me, (Point)*grid->bugs[i]);
+				if (adjacent == -1) {
+					int offset = paths[index[grid->bugs[i]->x][grid->bugs[i]->y]][index[me.x][me.y]];
+					Point newBugPos = offsetPoint((Point)*grid->bugs[i], offset);
+					adjacent = is_adjacent((Point)me, newBugPos);
+				}
+				assert(adjacent != -1);
+				adjacentBugs[adjacent] = true;
+				adjacentBug = true;
+				cerr << "can't go ";
+				switch (adjacent) {
+				case 0:
+					cerr << "up." << endl;
+					break;
+				case 1:
+					cerr << "right." << endl;
+					break;
+				case 2:
+					cerr << "down." << endl;
+					break;
+				case 3:
+					cerr << "left." << endl;
+					break;
+				default:
+					cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+					break;
+				}
+			}
+		}
+		if (adjacentBug) {
+			vector<Point> neighbors = getAdjacentCells(grid, (Point)me);
+			bool foundPath = false;
+			for (int i = 0; i < neighbors.size(); ++i) {
+				int adjacent = is_adjacent((Point)me, neighbors[i]);
+				if (!adjacentBugs[adjacent]) {
+					foundPath = true;
+					cerr << "Found a path: ";
+					switch (adjacent) {
+					case 0:
+						cerr << "up." << endl;
+						cout << "up" << endl;
+						break;
+					case 1:
+						cerr << "right." << endl;
+						cout << "right" << endl;
+						break;
+					case 2:
+						cerr << "down." << endl;
+						cout << "down" << endl;
+						break;
+					case 3:
+						cerr << "left." << endl;
+						cout << "left" << endl;
+						break;
+					default:
+						cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+						cout << "pass" << endl;
+						break;
+					}
+					break;
+				}
+			}
+			if (!foundPath) {
+				cerr << "Oh no! No possible path avoids the bugs!" << endl;
+				cout << "pass" << endl;
+			}
+		}
+		else {
+			cerr << "No adjacent bugs. Standing still." << endl;
+			cout << "pass" << endl;
+		}
+	}
+	else {
+
+		vector<Point> bestPath = findClosestItem((Point)me, grid, me.has_weapon);
+		if (bestPath.size() > 1) {
+			cerr << "Found best path." << endl;
+			switch (is_adjacent((Point)me, (Point)(bestPath[1]))) {
+			case 0:
+				cout << "up" << endl;
+				cerr << "up" << endl;
+				break;
+			case 1:
+				cout << "right" << endl;
+				cerr << "right" << endl;
+				break;
+			case 2:
+				cout << "down" << endl;
+				cerr << "down" << endl;
+				break;
+			case 3:
+				cout << "left" << endl;
+				cerr << "left" << endl;
+				break;
+			default:
+				cout << "pass" << endl;
+				cerr << "pass" << endl;
+				break;
+			}
+		}
+		else {
+			cerr << "No optimal path found." << endl;
+			bool adjacentBugs[4] = { false, false, false, false };
+			for (int i = 0; i < grid->bugs.size(); ++i) {
+				if (path_lengths[index[grid->bugs[i]->x][grid->bugs[i]->y]][index[me.x][me.y]] < 3) {
+					cerr << "Bug is blocking path, ";
+					int adjacent = is_adjacent((Point)me, (Point)*grid->bugs[i]);
+					if (adjacent == -1) {
+						int offset = paths[index[grid->bugs[i]->x][grid->bugs[i]->y]][index[me.x][me.y]];
+						Point newBugPos = offsetPoint((Point)*grid->bugs[i], offset);
+						adjacent = is_adjacent((Point)me, newBugPos);
+					}
+					assert(adjacent != -1);
+					adjacentBugs[adjacent] = true;
+					cerr << "can't go ";
+					switch (adjacent) {
+					case 0:
+						cerr << "up." << endl;
+						break;
+					case 1:
+						cerr << "right." << endl;
+						break;
+					case 2:
+						cerr << "down." << endl;
+						break;
+					case 3:
+						cerr << "left." << endl;
+						break;
+					default:
+						cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+						break;
+					}
+				}
+			}
+			cerr << "Targeting closest item." << endl;
+			int offset = -1;
+			int bestDist = INT_MAX;
+			for (int i = 0; i < grid->snippets.size(); ++i) {
+				int length = path_lengths[index[me.x][me.y]][index[grid->snippets[i]->x][grid->snippets[i]->y]];
+				cerr << "    Snippet at (" << grid->snippets[i]->x << "," << grid->snippets[i]->y << ") is " << length << " units away." << endl;
+				if (length < bestDist) {
+					int newOffset = paths[index[me.x][me.y]][index[grid->snippets[i]->x][grid->snippets[i]->y]];
+					if (!adjacentBugs[newOffset]) {
+						bestDist = length;
+						offset = newOffset;
+					}
+					else {
+						cerr << "        Unfortunately, its path is blocked by an adjacent bug." << endl;
+					}
+				}
+			}
+			for (int i = 0; i < grid->weapons.size(); ++i) {
+				int length = path_lengths[index[me.x][me.y]][index[grid->weapons[i]->x][grid->weapons[i]->y]];
+				cerr << "    Weapon at (" << grid->weapons[i]->x << "," << grid->weapons[i]->y << ") is " << length << " units away." << endl;
+				if (length < bestDist) {
+					int newOffset = paths[index[me.x][me.y]][index[grid->weapons[i]->x][grid->weapons[i]->y]];
+					if (!adjacentBugs[newOffset]) {
+						bestDist = length;
+						offset = newOffset;
+					}
+					else {
+						cerr << "        Unfortunately, its path is blocked by an adjacent bug." << endl;
+					}
+				}
+			}
+			if (offset == -1) {
+				cerr << "Every path to an item is blocked by an adjacent bug (!), choosing an escape route." << endl;
+				vector<Point> neighbors = getAdjacentCells(grid, (Point)me);
+				bool foundPath = false;
+				for (int i = 0; i < neighbors.size(); ++i) {
+					int adjacent = is_adjacent((Point)me, neighbors[i]);
+					if (!adjacentBugs[adjacent]) {
+						foundPath = true;
+						cerr << "Found a path: ";
+						switch (adjacent) {
+						case 0:
+							cerr << "up." << endl;
+							cout << "up" << endl;
+							break;
+						case 1:
+							cerr << "right." << endl;
+							cout << "right" << endl;
+							break;
+						case 2:
+							cerr << "down." << endl;
+							cout << "down" << endl;
+							break;
+						case 3:
+							cerr << "left." << endl;
+							cout << "left" << endl;
+							break;
+						default:
+							cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+							cout << "pass" << endl;
+							break;
+						}
+						break;
+					}
+				}
+				if (!foundPath) {
+					cerr << "Oh no! No possible path avoids the bugs!" << endl;
+					cout << "pass" << endl;
+				}
+			}
+			else {
+				switch (offset) {
+				case 0:
+					cout << "up" << endl;
+					cerr << "Output: up" << endl;
+					break;
+				case 1:
+					cout << "right" << endl;
+					cerr << "Output: right" << endl;
+					break;
+				case 2:
+					cout << "down" << endl;
+					cerr << "Output: down" << endl;
+					break;
+				case 3:
+					cout << "left" << endl;
+					cerr << "Output: left" << endl;
+					break;
+				default:
+					cout << "pass" << endl;
+					cerr << "Output: pass" << endl;
+					break;
+				}
+			}
+		}
+	}
+
+	for (int y = 0; y < 14; ++y) {
+		for (int x = 0; x < 20; ++x) {
+			if (find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]) != grid->bugs.end()) {
+				if (grid->cells[x][y]->is_wall())
+					cerr << " ";
+				else
+					cerr << " ";
+				cerr << "E";
+			}
+			else if (grid->cells[x][y]->is_wall())
+				cerr << "  ";
+			else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
+				cerr << " S";
+			else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+				cerr << " W";
+			else if (me.x == x && me.y == y)
+				cerr << " " << me.id;
+			else if (enemy.x == x && enemy.y == y)
+				cerr << " " << enemy.id;
+			else
+				cerr << "[]";
+		}
+		cerr << endl;
+	}
+	/*
 	if (bestPath.size() <= 1){
 		vector<Point> possibleMoves = getAdjacentCells(grid, (Point)me);
 		bool adjacentBug = false;
@@ -630,7 +871,7 @@ void do_move(Grid* grid) {
 			break;
 		}
 	}
-
+	
 	for (int y = 0; y < 14; ++y) {
 		for (int x = 0; x < 20; ++x) {
 			if (find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]) != grid->bugs.end()) {
@@ -655,4 +896,5 @@ void do_move(Grid* grid) {
 		}
 		cerr << endl;
 	}
+	*/
 }
