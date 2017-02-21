@@ -145,7 +145,7 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 			}
 			vector<Point>::iterator it = find(neighbors.begin(), neighbors.end(), bugPos);
 			if (it != neighbors.end()) {
-				if (newGrid->playerWeapons[me.id]) {
+				if (newGrid->playerWeapons[me.id] && neighborKilledBug[it - neighbors.begin()] == -1) {
 					neighborKilledBug[it - neighbors.begin()] = i;
 				}
 				else {
