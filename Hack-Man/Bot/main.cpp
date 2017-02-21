@@ -164,7 +164,7 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 		}
 		if (newGrid->playerWeapons[enemy.id] && !newGrid->playerWeapons[me.id] ||
 			newGrid->playerWeapons[enemy.id] && me.snippets < 4) {
-			Point enemyPos = (Point)enemy;
+			Point enemyPos = (Point)curr_enemy;
 			if (enemyPos == curr_start)
 				return vector<Point>();
 			vector<Point>::iterator it = find(neighbors.begin(), neighbors.end(), enemyPos);
@@ -196,10 +196,10 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 			}
 		}
 		for (int i = 0; i < newGrid->weapons.size(); ++i) {
-			int snipIndex = index[newGrid->weapons[i]->x][newGrid->weapons[i]->y];
-			if (path_lengths[enemyIndex][snipIndex] < bestDist) {
-				bestDist = path_lengths[enemyIndex][snipIndex];
-				bestOffset = paths[enemyIndex][snipIndex];
+			int wepIndex = index[newGrid->weapons[i]->x][newGrid->weapons[i]->y];
+			if (path_lengths[enemyIndex][wepIndex] < bestDist) {
+				bestDist = path_lengths[enemyIndex][wepIndex];
+				bestOffset = paths[enemyIndex][wepIndex];
 			}
 		}
 		if (bestOffset != -1)
@@ -332,11 +332,17 @@ void process_next_command(Grid* grid) {
 			cin >> value;
 			if (player_name == me.name) {
 				me.has_weapon = (value == "true");
-				grid->playerWeapons[me.id] = true;
+				if (me.has_weapon)
+					grid->playerWeapons[me.id] = true;
+				else
+					grid->playerWeapons[me.id] = false;
 			}
 			else {
 				enemy.has_weapon = (value == "true");
-				grid->playerWeapons[enemy.id] = true;
+				if (enemy.has_weapon)
+					grid->playerWeapons[enemy.id] = true;
+				else
+					grid->playerWeapons[enemy.id] = false;
 			}
 		}
 		else if (type == "is_paralyzed") {
@@ -647,7 +653,7 @@ void do_move(Grid* grid) {
 					}
 				}
 				if (length < bugBestDist) {
-					int newOffset = paths[index[me.x][me.y]][index[grid->snippets[i]->x][grid->snippets[i]->y]];
+					int newOffset = paths[index[me.x][me.y]][index[grid->weapons[i]->x][grid->weapons[i]->y]];
 					bugBestDist = length;
 					bugOffset = newOffset;
 				}
