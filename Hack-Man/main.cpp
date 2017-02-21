@@ -8,122 +8,12 @@
 #include <climits>
 #include <assert.h>
 #include "paths.h"
+#include "Cell.h"
+#include "Grid.h"
+#include "Player.h"
+#include "Point.h"
 
 using namespace std;
-
-class Point {
-public:
-	int x;
-	int y;
-	
-	bool operator==(const Point &other) {
-		return (x == other.x && y == other.y);
-	}
-	bool operator!=(const Point &other) {
-		return (x != other.x || y != other.y);
-	}
-};
-
-class Player : public Point {
-public:
-	string name;
-	int id;
-	int snippets;
-	bool has_weapon;
-	bool is_paralyzed;
-};
-
-class Cell : public Point {
-	bool wall = false;
-public:	
-	bool is_wall(){ return wall; }
-	void set_wall(bool value){ wall = value; }
-	Cell(int x, int y){
-		this->x = x;
-		this->y = y;
-	}
-};
-
-class Grid {
-	int w;
-	int h;
-	
-public:
-	vector<vector<Cell*>> cells;
-	int wallCount;
-	vector<Cell*> snippets;
-	vector<Cell*> weapons;
-	vector<Cell*> bugs;
-
-	int height() { return h; }
-	int width() { return w; }
-	Grid* copy() {
-		Grid* newGrid = new Grid(w, h);
-		for (int x = 0; x < w; ++x) {
-			for (int y = 0; y < h; ++y) {
-				if (cells[x][y]->is_wall()) {
-					newGrid->cells[x][y]->set_wall(true);
-					newGrid->wallCount++;
-				}
-			}
-		}
-		for (int i = 0; i < snippets.size(); ++i) {
-			int x = snippets[i]->x;
-			int y = snippets[i]->y;
-			newGrid->snippets.push_back(newGrid->cells[x][y]);
-		}
-		for (int i = 0; i < weapons.size(); ++i) {
-			int x = weapons[i]->x;
-			int y = weapons[i]->y;
-			newGrid->weapons.push_back(newGrid->cells[x][y]);
-		}
-		for (int i = 0; i < bugs.size(); ++i) {
-			int x = bugs[i]->x;
-			int y = bugs[i]->y;
-			newGrid->bugs.push_back(newGrid->cells[x][y]);
-		}
-		return newGrid;
-	}	
-	void make_bugpath() {	//Remove the walls in the 'server room' to allow bug pathfinding.
-		cells[ 9][6]->set_wall(false);
-		cells[10][6]->set_wall(false);
-		cells[ 8][7]->set_wall(false);
-		cells[ 9][7]->set_wall(false);
-		cells[10][7]->set_wall(false);
-		cells[11][7]->set_wall(false);
-	}
-	void reset() {
-		for (int x = 0; x < w; ++x) {
-			for (int y = 0; y < h; ++y) {
-				delete cells[x][y];
-				cells[x][y] = new Cell(x, y);
-			}
-		}
-		wallCount = 0;
-		snippets.clear();
-		weapons.clear();
-		bugs.clear();
-	}
-	Grid(int width, int height) {
-		w = width;
-		h = height;
-		wallCount = 0;
-		cells = vector<vector<Cell*>>(width);
-		for (int x = 0; x < width; ++x) {
-			cells[x] = vector<Cell*>(height);
-			for (int y = 0; y < height; ++y) {
-				cells[x][y] = new Cell(x, y);
-			}
-		}
-	}
-	~Grid() {
-		for (int x = 0; x < w; ++x) {
-			for (int y = 0; y < h; ++y) {
-				delete cells[x][y];
-			}
-		}
-	}
-};
 
 int width;
 int height;
