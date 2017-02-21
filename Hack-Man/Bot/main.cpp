@@ -182,7 +182,7 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 		int enemyIndex = index[curr_enemy.x][curr_enemy.y];
 		if (newGrid->playerWeapons[enemy.id] && !newGrid->playerWeapons[me.id])
 		{
-			int meIndex = index[me.x][me.y];
+			int meIndex = index[curr_start.x][curr_start.y];
 			if (path_lengths[enemyIndex][meIndex] < bestDist) {
 				bestDist = path_lengths[enemyIndex][meIndex];
 				bestOffset = paths[enemyIndex][meIndex];

@@ -12,7 +12,7 @@ class Grid {
 public:
 	vector<vector<Cell*>> cells;
 	int wallCount;
-	bool playerWeapons[2]{ false, false };
+	bool playerWeapons[2];
 	vector<Cell*> snippets;
 	vector<Cell*> weapons;
 	vector<Cell*> bugs;

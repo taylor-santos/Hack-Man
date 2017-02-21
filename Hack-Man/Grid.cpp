@@ -49,6 +49,8 @@ void Grid::reset() {
 		}
 	}
 	wallCount = 0;
+	playerWeapons[0] = false;
+	playerWeapons[1] = false;
 	snippets.clear();
 	weapons.clear();
 	bugs.clear();
@@ -58,6 +60,8 @@ Grid::Grid(int width, int height) {
 	h = height;
 	wallCount = 0;
 	cells = vector<vector<Cell*>>(width);
+	playerWeapons[0] = false;
+	playerWeapons[1] = false;
 	for (int x = 0; x < width; ++x) {
 		cells[x] = vector<Cell*>(height);
 		for (int y = 0; y < height; ++y) {
