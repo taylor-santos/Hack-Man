@@ -29,6 +29,8 @@ Grid* Grid::copy() {
 		int y = bugs[i]->y;
 		newGrid->bugs.push_back(newGrid->cells[x][y]);
 	}
+	newGrid->playerWeapons[0] = playerWeapons[0];
+	newGrid->playerWeapons[1] = playerWeapons[1];
 	return newGrid;
 }
 void Grid::make_bugpath() {	//Remove the walls in the 'server room' to allow bug pathfinding.
