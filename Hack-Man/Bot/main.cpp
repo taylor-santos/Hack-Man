@@ -22,6 +22,7 @@ int time_per_move;
 int time_remaining;
 int max_rounds;
 int current_round;
+vector<Point> prevBugs;
 Player me;
 Player enemy;
 
@@ -88,10 +89,20 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 	queue<Point> enemy_Q;
 	queue<Grid*> grid_Q;
 	queue<vector<Point>> path_Q;
+	queue<vector<Point>> bugPath_Q;
+	queue<vector<Point>> enemyPath_Q;
 	start_Q.push(start);
 	enemy_Q.push((Point)enemy);
 	grid_Q.push(grid->copy());
 	path_Q.push(vector<Point>());
+	vector<Point> bugPath = vector<Point>();
+	for (int i = 0; i < grid->bugs.size(); ++i) {
+		bugPath.push_back((Point)*grid->bugs[i]);
+	}
+	bugPath_Q.push(bugPath);
+	vector<Point> enemyPath;
+	enemyPath.push_back((Point)enemy);
+	enemyPath_Q.push(enemyPath);
 	while (start_Q.size() > 0) {
 		Point curr_start = start_Q.front();
 		start_Q.pop();
@@ -101,6 +112,11 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 		grid_Q.pop();
 		vector<Point> curr_path = path_Q.front();
 		path_Q.pop();
+		vector<Point> curr_bugPath = bugPath_Q.front();
+		bugPath_Q.pop();
+		vector<Point> curr_enemyPath = enemyPath_Q.front();
+		enemyPath_Q.pop();
+
 		curr_path.push_back(curr_start);
 		bool foundItem = false;
 		for (int i = 0; i < curr_grid->snippets.size(); ++i) {
@@ -121,6 +137,74 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 				path_Q.pop();
 			}
 			delete curr_grid;
+
+			cerr << " ";
+			for (int x = 0; x < 20; ++x)
+				cerr << "--";
+			cerr << endl;
+			for (int y = 0; y < 14; ++y) {
+				cerr << "|";
+				for (int x = 0; x < 20; ++x) {
+					vector<Cell*>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+					if (it != grid->bugs.end()) {
+						switch (grid->bug_directions[it - grid->bugs.begin()]) {
+						case 0:
+							cerr << "E^";
+							break;
+						case 1:
+							cerr << "E>";
+							break;
+						case 2:
+							cerr << "Ev";
+							break;
+						case 3:
+							cerr << "E<";
+							break;
+						default:
+							cerr << "E ";
+							break;
+						}
+					}
+					else if (grid->cells[x][y]->is_wall())
+						cerr << "::";
+					else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
+						cerr << "S ";
+					else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+						cerr << "W ";
+					else if (me.x == x && me.y == y)
+						cerr << me.id << " ";
+					else if (enemy.x == x && enemy.y == y)
+						cerr << enemy.id << " ";
+					else {
+						int symbolCount = 0;
+						vector<Point>::iterator it = find(curr_path.begin(), curr_path.end(), (Point)*grid->cells[x][y]);
+						if (it != curr_path.end()) {
+							cerr << ".";
+							symbolCount++;
+						}
+						it = find(curr_bugPath.begin(), curr_bugPath.end(), (Point)*grid->cells[x][y]);
+						if (it != curr_bugPath.end()) {
+							cerr << "e";
+							symbolCount++;
+						}
+						if (symbolCount == 2)
+							continue;
+						it = find(curr_enemyPath.begin(), curr_enemyPath.end(), (Point)*grid->cells[x][y]);
+						if (it != curr_enemyPath.end()) {
+							cerr << "x";
+							symbolCount++;
+						}
+						for (int i = 0; i < 2 - symbolCount; ++i)
+							cerr << " ";
+					}
+				}
+				cerr << "|" << endl;
+			}
+			cerr << " ";
+			for (int x = 0; x < 20; ++x)
+				cerr << "--";
+			cerr << endl;
+
 			return curr_path;
 		}
 		Grid* newGrid = curr_grid->copy();
@@ -152,8 +236,16 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 					neighbors.erase(it);
 				}
 			}
-			int offset = paths[index[bugPos.x][bugPos.y]][index[curr_start.x][curr_start.y]];
+			int bugDir = newGrid->bug_directions[i];
+			int offset;
+			if (bugDir == -1) {
+				offset = paths[index[bugPos.x][bugPos.y]][index[curr_start.x][curr_start.y]];
+			} else {
+				offset = paths_with_direction[bugDir][index[bugPos.x][bugPos.y]][index[curr_start.x][curr_start.y]];
+			}
 			Point newPos = offsetPoint(bugPos, offset);
+			curr_bugPath.push_back(newPos);
+			newGrid->bug_directions[i] = offset;
 			newGrid->bugs[i] = newGrid->cells[newPos.x][newPos.y];
 			it = find(neighbors.begin(), neighbors.end(), newPos);
 			if (it != neighbors.end())
@@ -161,6 +253,7 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 		}
 		if (killedBug != -1) {
 			newGrid->bugs.erase(newGrid->bugs.begin() + killedBug);
+			newGrid->bug_directions.erase(newGrid->bug_directions.begin() + killedBug);
 		}
 		if (newGrid->playerWeapons[enemy.id] && !newGrid->playerWeapons[me.id] ||
 			newGrid->playerWeapons[enemy.id] && me.snippets < 4) {
@@ -202,8 +295,10 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 				bestOffset = paths[enemyIndex][wepIndex];
 			}
 		}
-		if (bestOffset != -1)
+		if (bestOffset != -1) {
 			curr_enemy = offsetPoint(curr_enemy, bestOffset);
+			curr_enemyPath.push_back(curr_enemy);
+		}
 
 		vector<Cell*>::iterator snip_it = find(newGrid->snippets.begin(), newGrid->snippets.end(), newGrid->cells[curr_enemy.x][curr_enemy.y]);
 		if (snip_it != newGrid->snippets.end())
@@ -219,10 +314,13 @@ vector<Point> findClosestItem(Point start, Grid* grid, bool weapon) {
 				Grid* newGridCopy = newGrid->copy();
 				if (neighborKilledBug[i] != -1) {
 					newGridCopy->bugs.erase(newGridCopy->bugs.begin() + neighborKilledBug[i]);
+					newGridCopy->bug_directions.erase(newGridCopy->bug_directions.begin() + neighborKilledBug[i]);
 					newGridCopy->playerWeapons[me.id] = false;
 				}
 				grid_Q.push(newGridCopy);
 				path_Q.push(curr_path);
+				bugPath_Q.push(curr_bugPath);
+				enemyPath_Q.push(curr_enemyPath);
 			}
 		}
 		delete newGrid;
@@ -296,6 +394,17 @@ void process_next_command(Grid* grid) {
 						}
 						else if (c == 'E') {
 							grid->bugs.push_back(grid->cells[x][y]);
+							int bugDirection = -1;
+							for (int i = 0; i < prevBugs.size(); ++i)
+							{
+								int adjacent = is_adjacent(prevBugs[i], (Point)*grid->cells[x][y]);
+								if (adjacent != -1) {
+									bugDirection = adjacent;
+									prevBugs.erase(prevBugs.begin() + i);
+									break;
+								}
+							}
+							grid->bug_directions.push_back(bugDirection);
 						}
 						else if (c == 'W') {
 							grid->weapons.push_back(grid->cells[x][y]);
@@ -361,6 +470,10 @@ void process_next_command(Grid* grid) {
 		cin >> useless_move;
 		cin >> time_remaining;
 		do_move(grid);
+		prevBugs.clear();
+		for (int i = 0; i < grid->bugs.size(); ++i) {
+			prevBugs.push_back((Point)*grid->bugs[i]);
+		}
 		grid->reset();
 	}
 }
@@ -744,18 +857,36 @@ void do_move(Grid* grid) {
 			}
 		}
 	}
-
+	/*
+	cerr << " ";
+	for (int x = 0; x < 20; ++x)
+		cerr << "--";
+	cerr << endl;
 	for (int y = 0; y < 14; ++y) {
+		cerr << "|";
 		for (int x = 0; x < 20; ++x) {
-			if (find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]) != grid->bugs.end()) {
-				if (grid->cells[x][y]->is_wall())
-					cerr << " ";
-				else
-					cerr << " ";
-				cerr << "E";
+			vector<Cell*>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+			if (it != grid->bugs.end()) {
+				switch (grid->bug_directions[it-grid->bugs.begin()]) {
+				case 0:
+					cerr << "^E";
+					break;
+				case 1:
+					cerr << ">E";
+					break;
+				case 2:
+					cerr << "vE";
+					break;
+				case 3:
+					cerr << "<E";
+					break;
+				default:
+					cerr << " E";
+					break;
+				}
 			}
 			else if (grid->cells[x][y]->is_wall())
-				cerr << "  ";
+				cerr << "::";
 			else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
 				cerr << " S";
 			else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
@@ -764,139 +895,15 @@ void do_move(Grid* grid) {
 				cerr << " " << me.id;
 			else if (enemy.x == x && enemy.y == y)
 				cerr << " " << enemy.id;
-			else
-				cerr << "[]";
+			else {
+				cerr << "  ";
+			}
 		}
-		cerr << endl;
+		cerr << "|" << endl;
 	}
-	/*
-	if (bestPath.size() <= 1){
-	vector<Point> possibleMoves = getAdjacentCells(grid, (Point)me);
-	bool adjacentBug = false;
-	for (int i = 0; i < grid->bugs.size(); ++i) {
-	vector<Point>::iterator it = find(possibleMoves.begin(), possibleMoves.end(), (Point)*grid->bugs[i]);
-	if (it != possibleMoves.end()) {
-	adjacentBug = true;
-	possibleMoves.erase(it);
-	}
-	}
-	if (adjacentBug && possibleMoves.size() > 0) {
-	cerr << "There is an adjacent bug, must move ";
-	switch (is_adjacent((Point)me, (Point)(possibleMoves[0]))) {
-	case 0:
-	cout << "up" << endl;
-	cerr << "up" << endl;
-	break;
-	case 1:
-	cout << "right" << endl;
-	cerr << "right" << endl;
-	break;
-	case 2:
-	cout << "down" << endl;
-	cerr << "down" << endl;
-	break;
-	case 3:
-	cout << "left" << endl;
-	cerr << "left" << endl;
-	break;
-	default:
-	cout << "pass" << endl;
-	cerr << "pass" << endl;
-	break;
-	}
-	}
-	else {
-	vector<Point> bestPath;
-	for (int i = 0; i < grid->snippets.size(); ++i) {
-	vector<Point> newPath = shortestPath((Point)me, (Point)*grid->snippets[i], grid, false);
-	if (bestPath.size() == 0 || bestPath.size() > newPath.size())
-	bestPath = newPath;
-	}
-	for (int i = 0; i < grid->weapons.size(); ++i) {
-	vector<Point> newPath = shortestPath((Point)me, (Point)*grid->snippets[i], grid, false);
-	if (bestPath.size() == 0 || bestPath.size() > newPath.size())
-	bestPath = newPath;
-	}
-	if (bestPath.size() > 0) {
-	cerr << "Seems like enemy is closer to all snippets. Attempting to get there first." << endl;
-	switch (is_adjacent((Point)me, (Point)(bestPath[0]))) {
-	case 0:
-	cout << "up" << endl;
-	cerr << "up" << endl;
-	break;
-	case 1:
-	cout << "right" << endl;
-	cerr << "right" << endl;
-	break;
-	case 2:
-	cout << "down" << endl;
-	cerr << "down" << endl;
-	break;
-	case 3:
-	cout << "left" << endl;
-	cerr << "left" << endl;
-	break;
-	default:
-	cout << "pass" << endl;
-	cerr << "pass" << endl;
-	break;
-	}
-	}
-	else {
-	cerr << "ERROR: Enemy is closer to all snippets, and no path is available for some reason!" << endl;
-	cout << "pass" << endl;
-	cerr << "pass" << endl;
-	}
-	}
-	} else {
-	cerr << "Found best path." << endl;
-	switch (is_adjacent((Point)me, (Point)(bestPath[1]))) {
-	case 0:
-	cout << "up" << endl;
-	cerr << "up" << endl;
-	break;
-	case 1:
-	cout << "right" << endl;
-	cerr << "right" << endl;
-	break;
-	case 2:
-	cout << "down" << endl;
-	cerr << "down" << endl;
-	break;
-	case 3:
-	cout << "left" << endl;
-	cerr << "left" << endl;
-	break;
-	default:
-	cout << "pass" << endl;
-	cerr << "pass" << endl;
-	break;
-	}
-	}
-
-	for (int y = 0; y < 14; ++y) {
-	for (int x = 0; x < 20; ++x) {
-	if (find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]) != grid->bugs.end()) {
-	if (grid->cells[x][y]->is_wall())
-	cerr << "X";
-	else
 	cerr << " ";
-	cerr << "E";
-	}
-	else if (grid->cells[x][y]->is_wall())
-	cerr << "XX";
-	else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
-	cerr << " S";
-	else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
-	cerr << " W";
-	else if (me.x == x && me.y == y)
-	cerr << " " << me.id;
-	else if (enemy.x == x && enemy.y == y)
-	cerr << " " << enemy.id;
-	else
-	cerr << "  ";
-	}
+	for (int x = 0; x < 20; ++x)
+		cerr << "--";
 	cerr << endl;
-	}
 	*/
 }

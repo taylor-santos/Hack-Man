@@ -28,19 +28,13 @@ Grid* Grid::copy() {
 		int x = bugs[i]->x;
 		int y = bugs[i]->y;
 		newGrid->bugs.push_back(newGrid->cells[x][y]);
+		newGrid->bug_directions.push_back(bug_directions[i]);
 	}
 	newGrid->playerWeapons[0] = playerWeapons[0];
 	newGrid->playerWeapons[1] = playerWeapons[1];
 	return newGrid;
 }
-void Grid::make_bugpath() {	//Remove the walls in the 'server room' to allow bug pathfinding.
-	cells[9][6]->set_wall(false);
-	cells[10][6]->set_wall(false);
-	cells[8][7]->set_wall(false);
-	cells[9][7]->set_wall(false);
-	cells[10][7]->set_wall(false);
-	cells[11][7]->set_wall(false);
-}
+
 void Grid::reset() {
 	for (int x = 0; x < w; ++x) {
 		for (int y = 0; y < h; ++y) {
@@ -54,6 +48,7 @@ void Grid::reset() {
 	snippets.clear();
 	weapons.clear();
 	bugs.clear();
+	bug_directions.clear();
 }
 Grid::Grid(int width, int height) {
 	w = width;

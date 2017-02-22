@@ -144,10 +144,15 @@
   <ItemGroup>
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="paths.cpp" />
+    <ClCompile Include="shortestPath.cpp" />
+    <ClCompile Include="adjacent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="adjacent.h" />
     <ClInclude Include="Cell.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="shortestPath.h" />
     <ClInclude Include="paths.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Point.h" />

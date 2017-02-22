@@ -5,8 +5,8 @@
 #include <string>
 class Player : public Point {
 public:
-	std::string name;
-	int id;
+	//std::string name;
+	//int id;
 	int snippets;
 	bool has_weapon;
 	bool is_paralyzed;
