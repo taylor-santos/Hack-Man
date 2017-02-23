@@ -14,7 +14,6 @@ public:
 	vector<vector<Cell*>> cells;
 	int wallCount;
 	Player* players[2];
-	//bool playerWeapons[2];
 	vector<Cell*> snippets;
 	vector<Cell*> weapons;
 	vector<Cell*> bugs;

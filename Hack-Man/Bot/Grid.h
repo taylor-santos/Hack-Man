@@ -3,6 +3,7 @@
 #define GRID_H
 #include <vector>
 #include "Cell.h"
+#include "Player.h"
 
 using namespace std;
 
@@ -12,7 +13,7 @@ class Grid {
 public:
 	vector<vector<Cell*>> cells;
 	int wallCount;
-	bool playerWeapons[2];
+	Player* players[2];
 	vector<Cell*> snippets;
 	vector<Cell*> weapons;
 	vector<Cell*> bugs;

@@ -30,8 +30,13 @@ Grid* Grid::copy() {
 		newGrid->bugs.push_back(newGrid->cells[x][y]);
 		newGrid->bug_directions.push_back(bug_directions[i]);
 	}
-	newGrid->playerWeapons[0] = playerWeapons[0];
-	newGrid->playerWeapons[1] = playerWeapons[1];
+	for (int i = 0; i < 2; ++i) {
+		newGrid->players[i] = new Player();
+		newGrid->players[i]->x = players[i]->x;
+		newGrid->players[i]->y = players[i]->y;
+		newGrid->players[i]->has_weapon = players[i]->has_weapon;
+		newGrid->players[i]->is_paralyzed = players[i]->is_paralyzed;
+	}
 	return newGrid;
 }
 
@@ -42,9 +47,9 @@ void Grid::reset() {
 			cells[x][y] = new Cell(x, y);
 		}
 	}
+	players[0] = new Player();
+	players[1] = new Player();
 	wallCount = 0;
-	playerWeapons[0] = false;
-	playerWeapons[1] = false;
 	snippets.clear();
 	weapons.clear();
 	bugs.clear();
@@ -55,8 +60,8 @@ Grid::Grid(int width, int height) {
 	h = height;
 	wallCount = 0;
 	cells = vector<vector<Cell*>>(width);
-	playerWeapons[0] = false;
-	playerWeapons[1] = false;
+	players[0] = new Player();
+	players[1] = new Player();
 	for (int x = 0; x < width; ++x) {
 		cells[x] = vector<Cell*>(height);
 		for (int y = 0; y < height; ++y) {
