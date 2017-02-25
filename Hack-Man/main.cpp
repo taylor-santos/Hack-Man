@@ -289,9 +289,9 @@ void do_move(Grid* grid) {
 		for (int y = 0; y < 14; ++y) {
 			wall_character(grid, -1, y);
 			for (int x = 0; x < 20; ++x) {
-				vector<Point>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+				vector<Point>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), Point(x,y));
 				if (it != grid->bugs.end()) {
-					if (grid->cells[x][y]->is_wall())
+					if (walls[x][y])
 						cerr << " ";
 					else
 						cerr << " ";
@@ -309,24 +309,24 @@ void do_move(Grid* grid) {
 						cerr << "E<";
 						break;
 					default:
-						if (grid->cells[x][y]->is_wall())
+						if (walls[x][y])
 							cerr << "E ";
 						else
 							cerr << "E ";
 						break;
 					}
-				} else if (grid->cells[x][y]->is_wall())
+				} else if (walls[x][y])
 					wall_character(grid, x, y);
-				else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
+				else if (find(grid->snippets.begin(), grid->snippets.end(), Point(x,y)) != grid->snippets.end())
 					cerr << " S ";
-				else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+				else if (find(grid->weapons.begin(), grid->weapons.end(), Point(x,y)) != grid->weapons.end())
 					cerr << " W ";
 				else if (grid->players[myID]->x == x && grid->players[myID]->y == y)
 					cerr << " A ";
 				else if (grid->players[!myID]->x == x && grid->players[!myID]->y == y)
 					cerr << " B ";
 				else {
-					if (find(resultPaths[bestIndex].begin(), resultPaths[bestIndex].end(), (Point)*grid->cells[x][y]) != resultPaths[bestIndex].end())
+					if (find(resultPaths[bestIndex].begin(), resultPaths[bestIndex].end(), Point(x,y)) != resultPaths[bestIndex].end())
 						cerr << " a ";
 					else
 						cerr << "   ";
@@ -365,7 +365,7 @@ void do_move(Grid* grid) {
 		}
 	} else {
 		int optimalPosition = optimalPositions[index[grid->players[!myID]->x][grid->players[!myID]->y]];
-		Point optimalPoint = (Point)*grid->cells[coordinate[optimalPosition][0]][coordinate[optimalPosition][1]];
+		Point optimalPoint = Point(coordinate[optimalPosition][0], coordinate[optimalPosition][1]);
 		vector<Point> pathToPoint = shortestPathAroundBugsToPoint(grid, optimalPoint, myID);
 		if (pathToPoint.size() > 1) {
 			int adjacent = is_adjacent((Point)*grid->players[myID], pathToPoint[1]);
@@ -397,14 +397,14 @@ void do_move(Grid* grid) {
 			bool adjacentBug = false;
 			int myIndex = index[grid->players[myID]->x][grid->players[myID]->y];
 			for (int i = 0; i < grid->bugs.size(); ++i) {
-				int bugIndex = index[grid->bugs[i]->x][grid->bugs[i]->y];
+				int bugIndex = index[grid->bugs[i].x][grid->bugs[i].y];
 				if (path_lengths[bugIndex][myIndex] < 3) {
 					cerr << "Bug is nearby, ";
-					int adjacent = is_adjacent((Point)*grid->players[myID], (Point)*grid->bugs[i]);
+					int adjacent = is_adjacent((Point)*grid->players[myID], grid->bugs[i]);
 					if (adjacent == -1) {
 
 						int offset = paths[bugIndex][myIndex];
-						Point newBugPos = offsetPoint((Point)*grid->bugs[i], offset);
+						Point newBugPos = offsetPoint(grid->bugs[i], offset);
 						adjacent = is_adjacent((Point)*grid->players[myID], newBugPos);
 					}
 					assert(adjacent != -1);
