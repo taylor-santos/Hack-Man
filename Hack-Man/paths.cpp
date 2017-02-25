@@ -190,6 +190,30 @@ const int coordinate[162][2] =
 	{ 19,13 }
 };
 
+const bool walls[20][14] =
+{
+	{ false,false,false,false,false,false,false,true ,false,false,false,false,false,false },
+	{ false,true ,true ,true ,false,true ,false,true ,false,true ,true ,true ,true ,false },
+	{ false,true ,false,false,false,true ,false,false,false,false,true ,true ,true ,false },
+	{ false,true ,false,true ,false,true ,true ,true ,true ,false,true ,true ,true ,false },
+	{ false,true ,false,true ,false,false,false,false,true ,false,false,false,false,false },
+	{ false,true ,false,true ,true ,true ,true ,false,true ,false,true ,false,true ,false },
+	{ false,false,false,false,true ,false,false,false,false,false,true ,false,true ,false },
+	{ false,true ,true ,false,true ,false,true ,true ,true ,false,true ,false,true ,false },
+	{ false,true ,true ,false,false,false,true ,true ,true ,false,true ,false,false,false },
+	{ false,true ,true ,true ,true ,false,true ,true ,true ,false,true ,false,true ,true  },
+	{ false,true ,true ,true ,true ,false,true ,true ,true ,false,true ,false,true ,true  },
+	{ false,true ,true ,false,false,false,true ,true ,true ,false,true ,false,false,false },
+	{ false,true ,true ,false,true ,false,true ,true ,true ,false,true ,false,true ,false },
+	{ false,false,false,false,true ,false,false,false,false,false,true ,false,true ,false },
+	{ false,true ,false,true ,true ,true ,true ,false,true ,false,true ,false,true ,false },
+	{ false,true ,false,true ,false,false,false,false,true ,false,false,false,false,false },
+	{ false,true ,false,true ,false,true ,true ,true ,true ,false,true ,true ,true ,false },
+	{ false,true ,false,false,false,true ,false,false,false,false,true ,true ,true ,false },
+	{ false,true ,true ,true ,false,true ,false,true ,false,true ,true ,true ,true ,false },
+	{ false,false,false,false,false,false,false,true ,false,false,false,false,false,false }
+};
+
 const int optimalPositions[162] = { 75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,76,75,75,75,75,75,75,75,75,75,75,87,88,75,75,75,75,75,75,75,75,75,87,88,87,88,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75 };
 
 const int paths[162][162] =

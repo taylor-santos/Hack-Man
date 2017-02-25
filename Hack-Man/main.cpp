@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <queue>
 #include "paths.h"
-#include "Cell.h"
 #include "Grid.h"
 #include "Player.h"
 #include "Point.h"
@@ -89,19 +88,17 @@ void process_next_command(Grid* grid) {
 					}
 					continue;
 				}else if (c == 'x') {
-					grid->cells[x][y]->set_wall(true);
-					grid->wallCount++;
 					continue;
 				}
 				else if (c == '.') {
 					continue;
 				}
 				else if (c == 'E') {
-					grid->bugs.push_back(grid->cells[x][y]);
+					grid->bugs.push_back(Point(x,y));
 					int bugDirection = -1;
 					for (int j = 0; j < prevBugs.size(); ++j)
 					{
-						int adjacent = is_adjacent(prevBugs[j], (Point)*grid->cells[x][y]);
+						int adjacent = is_adjacent(prevBugs[j], Point(x,y));
 						if (adjacent != -1) {
 							bugDirection = adjacent;
 							prevBugs.erase(prevBugs.begin() + j);
@@ -112,11 +109,11 @@ void process_next_command(Grid* grid) {
 					continue;
 				}
 				else if (c == 'W') {
-					grid->weapons.push_back(grid->cells[x][y]);
+					grid->weapons.push_back(Point(x,y));
 					continue;
 				}
 				else if (c == 'C') {
-					grid->snippets.push_back(grid->cells[x][y]);
+					grid->snippets.push_back(Point(x, y));
 					continue;
 				}
 				else {
@@ -165,7 +162,7 @@ void process_next_command(Grid* grid) {
 		do_move(grid);
 		prevBugs.clear();
 		for (int i = 0; i < grid->bugs.size(); ++i) {
-			prevBugs.push_back((Point)*grid->bugs[i]);
+			prevBugs.push_back(grid->bugs[i]);
 		}
 		grid->reset();
 	}
@@ -186,10 +183,10 @@ void do_move(Grid* grid) {
 	for (int y = 0; y < 14; ++y) {
 		wall_character(grid, -1, y);
 		for (int x = 0; x < 20; ++x) {
-			vector<Cell*>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+			vector<Point>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), Point(x,y));
 			if (it != grid->bugs.end()) {
-				if (grid->cells[x][y]->is_wall())
-					cerr << " ";
+				if (walls[x][y])
+					cerr << "-";
 				else
 					cerr << " ";
 				switch (grid->bug_directions[it - grid->bugs.begin()]) {
@@ -206,17 +203,17 @@ void do_move(Grid* grid) {
 					cerr << "E<";
 					break;
 				default:
-					if (grid->cells[x][y]->is_wall())
-						cerr << "E ";
+					if (walls[x][y])
+						cerr << "E-";
 					else
 						cerr << "E ";
 					break;
 				}
-			} else if (grid->cells[x][y]->is_wall())
+			} else if (walls[x][y])
 				wall_character(grid, x, y);
-			else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
+			else if (find(grid->snippets.begin(), grid->snippets.end(), Point(x,y)) != grid->snippets.end())
 				cerr << " S ";
-			else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+			else if (find(grid->weapons.begin(), grid->weapons.end(), Point(x, y)) != grid->weapons.end())
 				cerr << " W ";
 			else if (grid->players[myID]->x == x && grid->players[myID]->y == y)
 				cerr << " A ";
@@ -250,7 +247,7 @@ void do_move(Grid* grid) {
 		} else {
 			for (int i = 0; i < curr_grid->snippets.size(); ++i) {
 				Grid* newGrid = curr_grid->copy();
-				vector<Point> newPath = shortestPathToPoint(&newGrid, (Point)*newGrid->snippets[i], myID);
+				vector<Point> newPath = shortestPathToPoint(&newGrid, newGrid->snippets[i], myID);
 				if (newPath.size() > 0) {
 					grid_Q.push(newGrid);
 					vector<Point> totalPath = curr_path;
@@ -263,7 +260,7 @@ void do_move(Grid* grid) {
 			}
 			for (int i = 0; i < curr_grid->weapons.size(); ++i) {
 				Grid* newGrid = curr_grid->copy();
-				vector<Point> newPath = shortestPathToPoint(&newGrid, (Point)*newGrid->weapons[i], myID);
+				vector<Point> newPath = shortestPathToPoint(&newGrid, newGrid->weapons[i], myID);
 				if (newPath.size() > 0) {
 					grid_Q.push(newGrid);
 					vector<Point> totalPath = curr_path;
@@ -292,7 +289,7 @@ void do_move(Grid* grid) {
 		for (int y = 0; y < 14; ++y) {
 			wall_character(grid, -1, y);
 			for (int x = 0; x < 20; ++x) {
-				vector<Cell*>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+				vector<Point>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
 				if (it != grid->bugs.end()) {
 					if (grid->cells[x][y]->is_wall())
 						cerr << " ";

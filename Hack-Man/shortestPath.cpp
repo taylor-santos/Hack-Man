@@ -593,13 +593,12 @@ vector<Point> shortestPathAroundBugs(Grid* grid, int playerID) {
 		path_Q.pop();
 
 		Point currPlayerPoint = (Point)*curr_grid->players[playerID];
-		Cell* currPlayerCell = curr_grid->cells[currPlayerPoint.x][currPlayerPoint.y];
 		visited.push_back(currPlayerPoint);
 		int currPlayerIndex = index[currPlayerPoint.x][currPlayerPoint.y];
 
 		curr_path.push_back(currPlayerPoint);
 
-		vector<Cell*>::iterator snippetIt = find(curr_grid->snippets.begin(), curr_grid->snippets.end(), currPlayerCell);
+		vector<Point>::iterator snippetIt = find(curr_grid->snippets.begin(), curr_grid->snippets.end(), currPlayerPoint);
 		if (snippetIt != curr_grid->snippets.end()) {
 			while (grid_Q.size() > 0) {
 				delete grid_Q.front();
@@ -609,7 +608,7 @@ vector<Point> shortestPathAroundBugs(Grid* grid, int playerID) {
 			delete curr_grid;
 			return curr_path;
 		}
-		vector<Cell*>::iterator weaponIt = find(curr_grid->weapons.begin(), curr_grid->weapons.end(), currPlayerCell);
+		vector<Point>::iterator weaponIt = find(curr_grid->weapons.begin(), curr_grid->weapons.end(), currPlayerPoint);
 		if (weaponIt != curr_grid->weapons.end()) {
 			while (grid_Q.size() > 0) {
 				delete grid_Q.front();
