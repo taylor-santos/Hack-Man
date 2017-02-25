@@ -4,9 +4,10 @@
 #include <vector>
 #include <string>
 #include <ctime>
-#include <queue>
+#include <stack>
 #include <climits>
 #include <assert.h>
+#include <queue>
 #include "paths.h"
 #include "Cell.h"
 #include "Grid.h"
@@ -171,7 +172,335 @@ void process_next_command(Grid* grid) {
 }
 
 void do_move(Grid* grid) {
-	cerr << "MOVE " << current_round << ":" << endl;
+	cerr << "Round " << current_round << ":" << endl;
+	cerr << "My Snippets: " << grid->players[myID]->snippets << endl;
+	cerr << "Enemy Snippets: " << grid->players[!myID]->snippets << endl;
+	if (grid->players[myID]->has_weapon)
+		cerr << "I have a weapon." << endl;
+	if (grid->players[!myID]->has_weapon)
+		cerr << "Enemy has a weapon." << endl;
+	cerr << "Current Grid:" << endl;
+	for (int x = -1; x<21; ++x)
+		wall_character(grid, x, -1);
+	cerr << endl;
+	for (int y = 0; y < 14; ++y) {
+		wall_character(grid, -1, y);
+		for (int x = 0; x < 20; ++x) {
+			vector<Cell*>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+			if (it != grid->bugs.end()) {
+				if (grid->cells[x][y]->is_wall())
+					cerr << " ";
+				else
+					cerr << " ";
+				switch (grid->bug_directions[it - grid->bugs.begin()]) {
+				case 0:
+					cerr << "E^";
+					break;
+				case 1:
+					cerr << "E>";
+					break;
+				case 2:
+					cerr << "Ev";
+					break;
+				case 3:
+					cerr << "E<";
+					break;
+				default:
+					if (grid->cells[x][y]->is_wall())
+						cerr << "E ";
+					else
+						cerr << "E ";
+					break;
+				}
+			} else if (grid->cells[x][y]->is_wall())
+				wall_character(grid, x, y);
+			else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
+				cerr << " S ";
+			else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+				cerr << " W ";
+			else if (grid->players[myID]->x == x && grid->players[myID]->y == y)
+				cerr << " A ";
+			else if (grid->players[!myID]->x == x && grid->players[!myID]->y == y)
+				cerr << " B ";
+			else {
+				cerr << "   ";
+			}
+		}
+		wall_character(grid, 20, y);
+		cerr << endl;
+	}
+	for (int x = -1; x<21; ++x)
+		wall_character(grid, x, 14);
+	cerr << endl << endl;
+	vector<Grid*> resultGrids;
+	vector<vector<Point>> resultPaths;
+	stack<Grid*> grid_Q;
+	stack<vector<Point>> path_Q;
+	grid_Q.push(grid->copy());
+	path_Q.push(vector<Point>());
+	cerr << "Optional choices:" << endl;
+	while (grid_Q.size() > 0) {
+		Grid* curr_grid = grid_Q.top();
+		grid_Q.pop();
+		vector<Point> curr_path = path_Q.top();
+		path_Q.pop();
+		if (curr_grid->snippets.size() == 0 && curr_grid->weapons.size() == 0 && curr_path.size() > 0) {
+			resultGrids.push_back(curr_grid);
+			resultPaths.push_back(curr_path);
+		} else {
+			for (int i = 0; i < curr_grid->snippets.size(); ++i) {
+				Grid* newGrid = curr_grid->copy();
+				vector<Point> newPath = shortestPathToPoint(&newGrid, (Point)*newGrid->snippets[i], myID);
+				if (newPath.size() > 0) {
+					grid_Q.push(newGrid);
+					vector<Point> totalPath = curr_path;
+					totalPath.insert(totalPath.end(), newPath.begin(), newPath.end());
+					path_Q.push(totalPath);
+				} else if (curr_path.size() > 0) {
+					resultGrids.push_back(curr_grid);
+					resultPaths.push_back(curr_path);
+				}
+			}
+			for (int i = 0; i < curr_grid->weapons.size(); ++i) {
+				Grid* newGrid = curr_grid->copy();
+				vector<Point> newPath = shortestPathToPoint(&newGrid, (Point)*newGrid->weapons[i], myID);
+				if (newPath.size() > 0) {
+					grid_Q.push(newGrid);
+					vector<Point> totalPath = curr_path;
+					totalPath.insert(totalPath.end(), newPath.begin(), newPath.end());
+					path_Q.push(totalPath);
+				} else if (curr_path.size() > 0) {
+					resultGrids.push_back(curr_grid);
+					resultPaths.push_back(curr_path);
+				}
+			}
+		}
+	}
+	int bestSnipCount = 0;
+	int bestIndex = -1;
+	for (int i = 0; i < resultGrids.size(); ++i) {
+		if (resultGrids[i]->players[myID]->snippets > bestSnipCount) {
+			bestSnipCount = resultGrids[i]->players[myID]->snippets;
+			bestIndex = i;
+		}
+	}
+	if (bestIndex != -1) {
+		cerr << "Chosen Moves:" << endl;
+		for (int x = -1; x<21; ++x)
+			wall_character(grid, x, -1);
+		cerr << endl;
+		for (int y = 0; y < 14; ++y) {
+			wall_character(grid, -1, y);
+			for (int x = 0; x < 20; ++x) {
+				vector<Cell*>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), grid->cells[x][y]);
+				if (it != grid->bugs.end()) {
+					if (grid->cells[x][y]->is_wall())
+						cerr << " ";
+					else
+						cerr << " ";
+					switch (grid->bug_directions[it - grid->bugs.begin()]) {
+					case 0:
+						cerr << "E^";
+						break;
+					case 1:
+						cerr << "E>";
+						break;
+					case 2:
+						cerr << "Ev";
+						break;
+					case 3:
+						cerr << "E<";
+						break;
+					default:
+						if (grid->cells[x][y]->is_wall())
+							cerr << "E ";
+						else
+							cerr << "E ";
+						break;
+					}
+				} else if (grid->cells[x][y]->is_wall())
+					wall_character(grid, x, y);
+				else if (find(grid->snippets.begin(), grid->snippets.end(), grid->cells[x][y]) != grid->snippets.end())
+					cerr << " S ";
+				else if (find(grid->weapons.begin(), grid->weapons.end(), grid->cells[x][y]) != grid->weapons.end())
+					cerr << " W ";
+				else if (grid->players[myID]->x == x && grid->players[myID]->y == y)
+					cerr << " A ";
+				else if (grid->players[!myID]->x == x && grid->players[!myID]->y == y)
+					cerr << " B ";
+				else {
+					if (find(resultPaths[bestIndex].begin(), resultPaths[bestIndex].end(), (Point)*grid->cells[x][y]) != resultPaths[bestIndex].end())
+						cerr << " a ";
+					else
+						cerr << "   ";
+				}
+			}
+			wall_character(grid, 20, y);
+			cerr << endl;
+		}
+		for (int x = -1; x<21; ++x)
+			wall_character(grid, x, 14);
+		cerr << endl << endl;
+
+		int adjacent = is_adjacent((Point)*grid->players[myID], resultPaths[bestIndex][1]);
+		cerr << "Taking direction: ";
+		switch (adjacent) {
+		case 0:
+			cerr << "up." << endl;
+			cout << "up" << endl;
+			break;
+		case 1:
+			cerr << "right." << endl;
+			cout << "right" << endl;
+			break;
+		case 2:
+			cerr << "down." << endl;
+			cout << "down" << endl;
+			break;
+		case 3:
+			cerr << "left." << endl;
+			cout << "left" << endl;
+			break;
+		default:
+			cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+			cout << "pass" << endl;
+			break;
+		}
+	} else {
+		int optimalPosition = optimalPositions[index[grid->players[!myID]->x][grid->players[!myID]->y]];
+		Point optimalPoint = (Point)*grid->cells[coordinate[optimalPosition][0]][coordinate[optimalPosition][1]];
+		vector<Point> pathToPoint = shortestPathAroundBugsToPoint(grid, optimalPoint, myID);
+		if (pathToPoint.size() > 1) {
+			int adjacent = is_adjacent((Point)*grid->players[myID], pathToPoint[1]);
+			cerr << "Taking direction: ";
+			switch (adjacent) {
+			case 0:
+				cerr << "up." << endl;
+				cout << "up" << endl;
+				break;
+			case 1:
+				cerr << "right." << endl;
+				cout << "right" << endl;
+				break;
+			case 2:
+				cerr << "down." << endl;
+				cout << "down" << endl;
+				break;
+			case 3:
+				cerr << "left." << endl;
+				cout << "left" << endl;
+				break;
+			default:
+				cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+				cout << "pass" << endl;
+				break;
+			}
+		} else {
+			bool adjacentBugs[4] = { false, false, false, false };
+			bool adjacentBug = false;
+			int myIndex = index[grid->players[myID]->x][grid->players[myID]->y];
+			for (int i = 0; i < grid->bugs.size(); ++i) {
+				int bugIndex = index[grid->bugs[i]->x][grid->bugs[i]->y];
+				if (path_lengths[bugIndex][myIndex] < 3) {
+					cerr << "Bug is nearby, ";
+					int adjacent = is_adjacent((Point)*grid->players[myID], (Point)*grid->bugs[i]);
+					if (adjacent == -1) {
+
+						int offset = paths[bugIndex][myIndex];
+						Point newBugPos = offsetPoint((Point)*grid->bugs[i], offset);
+						adjacent = is_adjacent((Point)*grid->players[myID], newBugPos);
+					}
+					assert(adjacent != -1);
+					adjacentBugs[adjacent] = true;
+					adjacentBug = true;
+					cerr << "can't go ";
+					switch (adjacent) {
+					case 0:
+						cerr << "up." << endl;
+						break;
+					case 1:
+						cerr << "right." << endl;
+						break;
+					case 2:
+						cerr << "down." << endl;
+						break;
+					case 3:
+						cerr << "left." << endl;
+						break;
+					default:
+						cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+						break;
+					}
+				}
+			}
+			if (adjacentBug) {
+				vector<Point> neighbors = getAdjacentCells(grid, (Point)*grid->players[myID]);
+				bool foundPath = false;
+				for (int i = 0; i < neighbors.size(); ++i) {
+					int adjacent = is_adjacent((Point)*grid->players[myID], neighbors[i]);
+					if (!adjacentBugs[adjacent]) {
+						foundPath = true;
+						cerr << "Found a path: ";
+						switch (adjacent) {
+						case 0:
+							cerr << "up." << endl;
+							cout << "up" << endl;
+							break;
+						case 1:
+							cerr << "right." << endl;
+							cout << "right" << endl;
+							break;
+						case 2:
+							cerr << "down." << endl;
+							cout << "down" << endl;
+							break;
+						case 3:
+							cerr << "left." << endl;
+							cout << "left" << endl;
+							break;
+						default:
+							cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+							cout << "pass" << endl;
+							break;
+						}
+						break;
+					}
+				}
+				if (!foundPath) {
+					cerr << "Oh no! No possible path avoids the bugs! Taking first choice." << endl;
+					int adjacent = is_adjacent((Point)*grid->players[myID], neighbors[0]);
+					switch (adjacent) {
+					case 0:
+						cerr << "up." << endl;
+						cout << "up" << endl;
+						break;
+					case 1:
+						cerr << "right." << endl;
+						cout << "right" << endl;
+						break;
+					case 2:
+						cerr << "down." << endl;
+						cout << "down" << endl;
+						break;
+					case 3:
+						cerr << "left." << endl;
+						cout << "left" << endl;
+						break;
+					default:
+						cerr << "pass. (THIS SHOULD NOT BE POSSIBLE)" << endl;
+						cout << "pass" << endl;
+						break;
+					}
+				}
+			} else {
+				cerr << "No adjacent bugs. Standing still." << endl;
+				cout << "pass" << endl;
+			}
+		}
+		
+	}
+	cerr << endl;
+	/*
 	for (int x = -1; x<21; ++x)
 		wall_character(grid, x, -1);
 	cerr << endl;
@@ -520,10 +849,10 @@ void do_move(Grid* grid) {
 			}
 		}
 	}
+	*/
 }
 
 int main() {
-	srand((int)time(0));
 	Grid* grid = new Grid(20, 14);
 	while (true) {
 		process_next_command(grid);

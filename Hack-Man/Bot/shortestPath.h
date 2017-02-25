@@ -10,8 +10,6 @@
 #include "adjacent.h"
 #include "paths.h"
 
+void wall_character(Grid* grid, int x, int y);
+vector<Point> shortestPathAroundBugsToPoint(Grid* grid, Point pt, int playerID);
 vector<Point> findClosestItem(Grid* grid, int playerID);
-
-//vector<Point> recursiveFindBestPath(Grid* grid, int playerID);
-//vector<Point> shortestPathAroundBugs(Grid* grid, int playerID);
-//vector<Point> findClosestItem(Grid* grid, int playerID);
