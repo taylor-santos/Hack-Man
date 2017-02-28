@@ -5,9 +5,7 @@ Point offsetPoint(Point pt, int offset) {
 		return pt;
 	int dx[4] = { 0,1,0,-1 };
 	int dy[4] = { -1,0,1,0 };
-	Point newPoint;
-	newPoint.x = pt.x + dx[offset];
-	newPoint.y = pt.y + dy[offset];
+	Point newPoint(pt.x + dx[offset], pt.y + dy[offset]);
 	return newPoint;
 }
 
@@ -38,13 +36,13 @@ vector<Point> getAdjacentCells(Grid* grid, Point pt) {
 	vector<Point> adjacent;
 	int x = pt.x;
 	int y = pt.y;
-	if (y > 0 && !grid->cells[x][y - 1]->is_wall())
-		adjacent.push_back((Point)(*grid->cells[x][y - 1]));
-	if (y < grid->height() - 1 && !grid->cells[x][y + 1]->is_wall())
-		adjacent.push_back((Point)(*grid->cells[x][y + 1]));
-	if (x > 0 && !grid->cells[x - 1][y]->is_wall())
-		adjacent.push_back((Point)(*grid->cells[x - 1][y]));
-	if (x < grid->width() - 1 && !grid->cells[x + 1][y]->is_wall())
-		adjacent.push_back((Point)(*grid->cells[x + 1][y]));
+	if (y > 0 && !walls[x][y - 1])
+		adjacent.push_back(Point(x, y - 1));
+	if (y < grid->height() - 1 && !walls[x][y + 1])
+		adjacent.push_back(Point(x, y + 1));
+	if (x > 0 && !walls[x-1][y])
+		adjacent.push_back(Point(x - 1, y));
+	if (x < grid->width() - 1 && !walls[x + 1][y])
+		adjacent.push_back(Point(x + 1, y));
 	return adjacent;
 }

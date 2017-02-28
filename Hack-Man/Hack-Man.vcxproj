@@ -152,7 +152,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="adjacent.h" />
-    <ClInclude Include="Cell.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="shortestPath.h" />
     <ClInclude Include="paths.h" />
