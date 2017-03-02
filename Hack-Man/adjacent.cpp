@@ -38,11 +38,11 @@ vector<Point> getAdjacentCells(Grid* grid, Point pt) {
 	int y = pt.y;
 	if (y > 0 && !walls[x][y - 1])
 		adjacent.push_back(Point(x, y - 1));
-	if (y < grid->height() - 1 && !walls[x][y + 1])
+	if (y < 13 && !walls[x][y + 1])
 		adjacent.push_back(Point(x, y + 1));
 	if (x > 0 && !walls[x-1][y])
 		adjacent.push_back(Point(x - 1, y));
-	if (x < grid->width() - 1 && !walls[x + 1][y])
+	if (x < 19 && !walls[x + 1][y])
 		adjacent.push_back(Point(x + 1, y));
 	return adjacent;
 }

@@ -5,6 +5,7 @@ using namespace std;
 
 Grid* Grid::copy() {
 	Grid* newGrid = new Grid(w, h);
+	newGrid->round = round;
 	newGrid->bugs = bugs;
 	newGrid->bug_directions = bug_directions;
 	newGrid->snippets = snippets;
