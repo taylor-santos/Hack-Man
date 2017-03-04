@@ -2,286 +2,6 @@
 
 using namespace std;
 
-void wall_character(Grid* grid, int x, int y) {
-	char surroundings = 0;
-	int dx[4] = { 0,1,0,-1 };
-	int dy[4] = { -1,0,1,0 };
-	for (int d = 0; d < 4; ++d) {
-		if (x + dx[d] < 0 || x + dx[d] > 19 ||
-			y + dy[d] < 0 || y + dy[d] > 13)
-			surroundings = surroundings | 1 << d;
-		else
-			surroundings = surroundings | (walls[x + dx[d]][y + dy[d]]) << d;
-	}
-	switch (surroundings) {
-	case (char)0b00000000:
-		cerr << " - ";
-		return;
-	case (char)0b00000001:
-		cerr << " ' ";
-		return;
-	case (char)0b00000010:
-		cerr << " --";
-		return;
-	case (char)0b00000011:
-		cerr << " '-";
-		return;
-	case (char)0b00000100:
-		cerr << " , ";
-		return;
-	case (char)0b00000101:
-		cerr << " | ";
-		return;
-	case (char)0b00000110:
-		cerr << " ,-";
-		return;
-	case (char)0b00000111:
-		cerr << " |-";
-		return;
-	case (char)0b00001000:
-		cerr << "-- ";
-		return;
-	case (char)0b00001001:
-		cerr << "-' ";
-		return;
-	case (char)0b00001010:
-		cerr << "---";
-		return;
-	case (char)0b00001011:
-		cerr << "-'-";
-		return;
-	case (char)0b00001100:
-		cerr << "-, ";
-		return;
-	case (char)0b00001101:
-		cerr << "-| ";
-		return;
-	case (char)0b00001110:
-		cerr << "-,-";
-		return;
-	case (char)0b00001111:
-		cerr << "-|-";
-		return;
-	}
-	/*
-	switch (surroundings) {
-	case (char)0b00000000:
-		cerr << "|||";
-		return;
-	case (char)0b00000001:
-		cerr << "|_|";
-		return;
-	case (char)0b00000010:
-		cerr << "|--";
-		return;
-	case (char)0b00000011:
-		cerr << "|__";
-		return;
-	case (char)0b00000100:
-		cerr << "|^|";
-		return;
-	case (char)0b00000101:
-		cerr << "| |";
-		return;
-	case (char)0b00000110:
-		cerr << "|^^";
-		return;
-	case (char)0b00000111:
-		cerr << "|  ";
-		return;
-	case (char)0b00001000:
-		cerr << "--|";
-		return;
-	case (char)0b00001001:
-		cerr << "__|";
-		return;
-	case (char)0b00001010:
-		cerr << "---";
-		return;
-	case (char)0b00001011:
-		cerr << "___";
-		return;
-	case (char)0b00001100:
-		cerr << "^^|";
-		return;
-	case (char)0b00001101:
-		cerr << "  |";
-		return;
-	case (char)0b00001110:
-		cerr << "^^^";
-		return;
-	case (char)0b00001111:
-		cerr << "   ";
-		return;
-	}
-	*/
-	/*
-	switch (surroundings) {
-	case (char)0b00000000:
-		cerr << " - ";
-		return;
-	case (char)0b00000001:
-		cerr << " ' ";
-		return;
-	case (char)0b00000010:
-		cerr << " --";
-		return;
-	case (char)0b00000011:
-		cerr << " '-";
-		return;
-	case (char)0b00000100:
-		cerr << " , ";
-		return;
-	case (char)0b00000101:
-		cerr << " | ";
-		return;
-	case (char)0b00000110:
-		cerr << " ,-";
-		return;
-	case (char)0b00000111:
-		cerr << " |-";
-		return;
-	case (char)0b00001000:
-		cerr << "-- ";
-		return;
-	case (char)0b00001001:
-		cerr << "-' ";
-		return;
-	case (char)0b00001010:
-		cerr << "---";
-		return;
-	case (char)0b00001011:
-		cerr << "-'-";
-		return;
-	case (char)0b00001100:
-		cerr << "-, ";
-		return;
-	case (char)0b00001101:
-		cerr << "-| ";
-		return;
-	case (char)0b00001110:
-		cerr << "-,-";
-		return;
-	case (char)0b00001111:
-		cerr << "-|-";
-		return;
-	}
-	*/
-	/*
-	switch (surroundings) {
-	case (char)0b00000000:
-		cerr << " " << (unsigned char)205 << ' ';
-		return;
-	case (char)0b00000001:
-		cerr << " " << (unsigned char)202 << ' ';
-		return;
-	case (char)0b00000010:
-		cerr << " " << (unsigned char)205 << (unsigned char)205;
-		return;
-	case (char)0b00000011:
-		cerr << " " << (unsigned char)200 << (unsigned char)205;
-		return;
-	case (char)0b00000100:
-		cerr << " " << (unsigned char)203 << ' ';
-		return;
-	case (char)0b00000101:
-		cerr << " " << (unsigned char)186 << ' ';
-		return;
-	case (char)0b00000110:
-		cerr << " " << (unsigned char)201 << (unsigned char)205;
-		return;
-	case (char)0b00000111:
-		cerr << " " << (unsigned char)204 << (unsigned char)205;
-		return;
-	case (char)0b00001000:
-		cerr << (unsigned char)205 << (unsigned char)205 << ' ';
-		return;
-	case (char)0b00001001:
-		cerr << (unsigned char)205 << (unsigned char)188 << ' ';
-		return;
-	case (char)0b00001010:
-		cerr << (unsigned char)205 << (unsigned char)205 << (unsigned char)205;
-		return;
-	case (char)0b00001011:
-		cerr << (unsigned char)205 << (unsigned char)202 << (unsigned char)205;
-		return;
-	case (char)0b00001100:
-		cerr << (unsigned char)205 << (unsigned char)187 << ' ';
-		return;
-	case (char)0b00001101:
-		cerr << (unsigned char)205 << (unsigned char)185 << ' ';
-		return;
-	case (char)0b00001110:
-		cerr << (unsigned char)205 << (unsigned char)203 << (unsigned char)205;
-		return;
-	case (char)0b00001111:
-		cerr << (unsigned char)205 << (unsigned char)206 << (unsigned char)205;
-		return;
-	}
-	*/
-}
-
-void printGrid(Grid* grid, vector<vector<Point>> items, vector<char> icons, int indent) {
-	for (int i = 0; i < indent; ++i)
-		cerr << "   ";
-	for (int x = -1; x<21; ++x)
-		wall_character(grid, x, -1);
-	cerr << endl;
-	for (int i = 0; i < indent; ++i)
-		cerr << "   ";
-	for (int y = 0; y < 14; ++y) {
-		wall_character(grid, -1, y);
-		for (int x = 0; x < 20; ++x) {
-			vector<Point>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), Point(x, y));
-			if (it != grid->bugs.end()) {
-				if (walls[x][y])
-					cerr << "-";
-				else
-					cerr << " ";
-				switch (grid->bug_directions[it - grid->bugs.begin()]) {
-				case 0:
-					cerr << "E^";
-					break;
-				case 1:
-					cerr << "E>";
-					break;
-				case 2:
-					cerr << "Ev";
-					break;
-				case 3:
-					cerr << "E<";
-					break;
-				default:
-					if (walls[x][y])
-						cerr << "E-";
-					else
-						cerr << "E ";
-					break;
-				}
-			} else if (walls[x][y])
-				wall_character(grid, x, y);
-			else {
-				int iconCount = 0;
-				for (int i = 0; i < items.size() && iconCount < 3; ++i) {
-					if (find(items[i].begin(), items[i].end(), Point(x, y)) != items[i].end()) {
-						cerr << icons[i];
-						iconCount++;
-					}
-				}
-				for (int i = 0; i < 3 - iconCount; ++i)
-					cerr << " ";
-			}
-		}
-		wall_character(grid, 20, y);
-		cerr << endl;
-		for (int i = 0; i < indent; ++i)
-			cerr << "   ";
-	}
-	for (int x = -1; x<21; ++x)
-		wall_character(grid, x, 14);
-	cerr << endl;
-}
-
 vector<Point> bestPath(Grid** grid, int playerID, int depth) {
 	vector<Point> targetPoints;
 	for (int snipIndex = 0; snipIndex < (*grid)->snippets.size(); ++snipIndex)
@@ -306,9 +26,9 @@ vector<Point> bestPath(Grid** grid, int playerID, int depth) {
 		Grid* newGrid = (*grid)->copy();
 		Point target = targetPoints[targetIndex];
 		vector<Point> pathToTarget = bestPathToPoint(&newGrid, target, playerID, depth);
-		continueGrids.push(newGrid);
-		continuePaths.push(pathToTarget);
 		if (pathToTarget.size() > 1) {
+			continueGrids.push(newGrid);
+			continuePaths.push(pathToTarget);
 			int offset = is_adjacent((Point)*(*grid)->players[playerID], pathToTarget[1]);
 			if (direction == -1)
 				direction = offset;
@@ -324,7 +44,7 @@ vector<Point> bestPath(Grid** grid, int playerID, int depth) {
 		resultPaths.push_back(pathToTarget);
 		*/
 	}
-	if (singleDirection) {
+	if (singleDirection && continueGrids.size() > 0) {
 		delete (*grid);
 		(*grid) = continueGrids.front();
 		return continuePaths.front();
@@ -342,23 +62,31 @@ vector<Point> bestPath(Grid** grid, int playerID, int depth) {
 		curr_path.insert(curr_path.end(), nextPath.begin(), nextPath.end());
 		resultGrids.push_back(curr_grid);
 		resultPaths.push_back(curr_path);
-
 	}
 	int bestSnipCount = 0;
 	int bestIndex = -1;
+	if (depth == 0)
+		cerr << "Possible paths:" << endl;
 	for (int i = 0; i < resultGrids.size(); ++i) {
-		if (resultGrids[i]->players[playerID]->snippets > bestSnipCount) {
-			bestSnipCount = resultGrids[i]->players[playerID]->snippets;
+		if (depth == 0) {
+			for (int j = 0; j < resultPaths[i].size(); ++j)
+				cerr << "(" << resultPaths[i][j].x << "," << resultPaths[i][j].y << "),";
+			cerr << endl;
+		}
+		if (resultGrids[i]->players[playerID]->snippets + (!(*grid)->players[playerID]->has_weapon && resultGrids[i]->players[playerID]->has_weapon ? 1 : 0) > bestSnipCount) {
+			bestSnipCount = resultGrids[i]->players[playerID]->snippets + (!(*grid)->players[playerID]->has_weapon && resultGrids[i]->players[playerID]->has_weapon ? 1 : 0);
 			bestIndex = i;
 		}
-		if (resultGrids[i]->players[playerID]->snippets == bestSnipCount) {
-			if (resultFirstPathLength[i] < resultFirstPathLength[i]) {
-				bestSnipCount = resultGrids[i]->players[playerID]->snippets;
+		if (resultGrids[i]->players[playerID]->snippets + (!(*grid)->players[playerID]->has_weapon && resultGrids[i]->players[playerID]->has_weapon ? 1 : 0) == bestSnipCount) {
+			if (resultPaths[i].size() < resultPaths[bestIndex].size()) {
+				bestSnipCount = resultGrids[i]->players[playerID]->snippets + (!(*grid)->players[playerID]->has_weapon && resultGrids[i]->players[playerID]->has_weapon ? 1 : 0);
 				bestIndex = i;
 			}
 		}
 	}
 	if (bestIndex != -1) {
+		if (depth == 0)
+			cerr << "Chose path #" << bestIndex + 1 << endl;
 		delete (*grid);
 		(*grid) = resultGrids[bestIndex];
 		return resultPaths[bestIndex];
@@ -529,6 +257,13 @@ vector<Point> bestPathToPoint(Grid** grid, Point pt, int playerID, int printInde
 					enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
 				}
 			}
+			if (newGrid->players[!playerID]->has_weapon) {
+				vector<Point> enemyToPlayer = shortestPathAroundBugsToPoint(newGrid, (Point)*newGrid->players[playerID], !playerID);
+				if (enemyToPlayer.size() > 1 && enemyToPlayer.size() < shortestPathLength) {
+					shortestPathLength = enemyToPlayer.size();
+					enemyOffset = is_adjacent(curr_enemyPosition, enemyToPlayer[1]);
+				}
+			}
 		} else {
 			newGrid->players[!playerID]->is_paralyzed = false;
 		}
@@ -588,210 +323,6 @@ vector<Point> bestPathToPoint(Grid** grid, Point pt, int playerID, int printInde
 			}
 		}
 		delete curr_grid;
-
-		//Find Point Collisions
-
-		/*
-		//Find Bug Collisions
-		vector<int> neighborBugDirections;
-		vector<int> killedBugs;
-		bool playerKilledByBug = false;
-		for (int bugIndex = 0; bugIndex < curr_grid->bugs.size(); ++bugIndex) {
-			if (curr_grid->bugs[bugIndex] == curr_playerPosition) {
-				if (curr_grid->players[playerID]->has_weapon) {
-					curr_grid->players[playerID]->has_weapon = false;
-					killedBugs.push_back(bugIndex);
-					continue;
-				} else {
-					playerKilledByBug = true;
-					break;
-				}
-			}else if (curr_grid->bugs[bugIndex] == curr_enemyPosition) {
-				killedBugs.push_back(bugIndex);
-				if (curr_grid->players[!playerID]->has_weapon) {
-					curr_grid->players[!playerID]->has_weapon = false;
-				} else {
-					curr_grid->players[!playerID]->snippets -= 4;
-				}
-				continue;
-			}
-			int bugPositionIndex = index[curr_grid->bugs[bugIndex].x][curr_grid->bugs[bugIndex].y];
-			int bugDirection = curr_grid->bug_directions[bugIndex];
-			int offset = -1;
-			if (bugDirection == -1) {
-				if (path_lengths[bugPositionIndex][playerPositionIndex] <= path_lengths[bugPositionIndex][enemyPositionIndex])
-					offset = paths[bugPositionIndex][playerPositionIndex];
-				else
-					offset = paths[bugPositionIndex][enemyPositionIndex];
-			} else {
-				if (path_lengths_with_direction[bugDirection][bugPositionIndex][playerPositionIndex] <= path_lengths_with_direction[bugDirection][bugPositionIndex][enemyPositionIndex])
-					offset = paths_with_direction[bugDirection][bugPositionIndex][playerPositionIndex];
-				else
-					offset = paths_with_direction[bugDirection][bugPositionIndex][enemyPositionIndex];
-			}
-			assert(offset != -1);
-			curr_grid->bugs[bugIndex] = offsetPoint(curr_grid->bugs[bugIndex], offset);
-			curr_bugPath.push_back(curr_grid->bugs[bugIndex]);
-			if (curr_grid->bugs[bugIndex] == curr_playerPosition) {
-				neighborBugDirections.push_back(offset);
-			} else if (curr_grid->bugs[bugIndex] == curr_enemyPosition) {
-				//FIXME: Wrong way to deal with adjacent bugs
-				killedBugs.push_back(bugIndex);
-				if (curr_grid->players[!playerID]->has_weapon) {
-					curr_grid->players[!playerID]->has_weapon = false;
-				} else {
-					curr_grid->players[!playerID]->snippets -= 4;
-				}
-			}
-		}
-		if (playerKilledByBug) {
-			delete curr_grid;
-			continue;
-		}
-		for (int i = killedBugs.size() - 1; i >= 0; --i) { //Iterate from back to front because we are removing using the bugs' index.
-			curr_grid->bugs.erase(curr_grid->bugs.begin() + killedBugs[i]);
-			curr_grid->bug_directions.erase(curr_grid->bug_directions.begin() + killedBugs[i]);
-		}
-
-		//Find Item Collisions
-		vector<Point>::iterator snipIt = find(curr_grid->snippets.begin(), curr_grid->snippets.end(), curr_enemyPosition);
-		if (snipIt != curr_grid->snippets.end()) {
-			curr_grid->players[!playerID]->snippets++;
-			curr_grid->snippets.erase(snipIt);
-		}
-		snipIt = find(curr_grid->snippets.begin(), curr_grid->snippets.end(), curr_playerPosition);
-		if (snipIt != curr_grid->snippets.end()) {
-			curr_grid->players[playerID]->snippets++;
-			curr_grid->snippets.erase(snipIt);
-		}
-		vector<Point>::iterator weapIt = find(curr_grid->weapons.begin(), curr_grid->weapons.end(), curr_enemyPosition);
-		if (weapIt != curr_grid->weapons.end()) {
-			curr_grid->players[!playerID]->has_weapon = true;
-			curr_grid->weapons.erase(weapIt);
-		}
-		weapIt = find(curr_grid->weapons.begin(), curr_grid->weapons.end(), curr_playerPosition);
-		if (weapIt != curr_grid->weapons.end()) {
-			curr_grid->players[playerID]->has_weapon = true;
-			curr_grid->weapons.erase(weapIt);
-		}
-	
-		if (curr_enemyPosition == curr_playerPosition) {
-			if (curr_grid->players[!playerID]->has_weapon) {
-				delete curr_grid;
-				continue;
-			} else if (curr_grid->players[playerID]->has_weapon) {
-				curr_grid->players[playerID]->has_weapon = false;
-				curr_grid->players[!playerID]->snippets -= 4;
-				curr_grid->players[playerID]->is_paralyzed = true;
-			}
-		}
-		if (curr_enemyPosition == pt) {
-			delete curr_grid;
-			continue;
-		}
-		
-		int enemyOffset = -1;
-		if (!curr_grid->players[!playerID]->is_paralyzed) {
-			//MOVE ENEMY
-			int shortestPathLength = INT_MAX;
-			for (int snipIndex = 0; snipIndex < curr_grid->snippets.size(); ++snipIndex) {
-				vector<Point> enemyToItem = shortestPathAroundBugsToPoint(curr_grid, curr_grid->snippets[snipIndex], !playerID);
-				vector<Point> playerToItem = shortestPathAroundBugsToPoint(curr_grid, curr_grid->snippets[snipIndex], playerID);
-				if ((playerToItem.size() == 0 && enemyToItem.size() > 1) || enemyToItem.size() > 1 && enemyToItem.size() <= playerToItem.size() && enemyToItem.size() < shortestPathLength) {
-					shortestPathLength = enemyToItem.size();
-					enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
-				}
-				//if (enemyToItem.size() > 1 && enemyToItem.size() < shortestPathLength) {
-				//	shortestPathLength = enemyToItem.size();
-				//	enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
-				//}
-			}
-			for (int weapIndex = 0; weapIndex < curr_grid->weapons.size(); ++weapIndex) {
-				vector<Point> enemyToItem = shortestPathAroundBugsToPoint(curr_grid, curr_grid->weapons[weapIndex], !playerID);
-				vector<Point> playerToItem = shortestPathAroundBugsToPoint(curr_grid, curr_grid->weapons[weapIndex], playerID);
-				if ((playerToItem.size() == 0 && enemyToItem.size() > 1) || enemyToItem.size() > 1 && enemyToItem.size() <= playerToItem.size() && enemyToItem.size() < shortestPathLength) {
-				shortestPathLength = enemyToItem.size();
-					enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
-				}
-				//if (enemyToItem.size() > 1 && enemyToItem.size() < shortestPathLength) {
-				//	shortestPathLength = enemyToItem.size();
-				//	enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
-				//}
-			}
-		} else {
-			curr_grid->players[!playerID]->is_paralyzed = false;
-		}
-
-		if (enemyOffset != -1) {
-			curr_enemyPosition = offsetPoint(curr_enemyPosition, enemyOffset);
-			curr_grid->players[!playerID]->x = curr_enemyPosition.x;
-			curr_grid->players[!playerID]->y = curr_enemyPosition.y;
-		}
-
-		if (curr_enemyPosition == curr_playerPosition) {
-			if (curr_grid->players[!playerID]->has_weapon) {
-				neighborBugDirections.push_back(enemyOffset);
-			}
-		}
-		if (curr_enemyPosition == pt) {
-			delete curr_grid;
-			continue;
-		} else if (curr_playerPosition == pt) {
-			while (grid_Q.size() > 0) {
-				delete grid_Q.front();
-				grid_Q.pop();
-			}
-
-			vector<vector<Point>> items;
-			vector<char> icons;
-
-			vector<Point> playerPos;
-			playerPos.push_back((Point)*(*grid)->players[playerID]);
-			vector<Point> enemyPos;
-			enemyPos.push_back((Point)*(*grid)->players[!playerID]);
-			vector<Point> snippets = (*grid)->snippets;
-			vector<Point> weapons = (*grid)->weapons;
-
-			items.push_back(playerPos);
-			icons.push_back('A');
-			items.push_back(enemyPos);
-			icons.push_back('B');
-			items.push_back(snippets);
-			icons.push_back('S');
-			items.push_back(weapons);
-			icons.push_back('W');
-			items.push_back(curr_path);
-			icons.push_back('a');
-			items.push_back(curr_enemyPath);
-			icons.push_back('b');
-			items.push_back(curr_bugPath);
-			icons.push_back('e');
-
-			printGrid((*grid), items, icons, printIndent);
-
-			delete *grid;
-			(*grid) = curr_grid;
-			return curr_path;
-		}
-		
-		vector<Point> neighbors = getAdjacentCells(curr_grid, curr_playerPosition);
-		for (int neighborIndex = 0; neighborIndex < neighbors.size(); ++neighborIndex) {
-			int neighborOffset = is_adjacent(neighbors[neighborIndex], curr_playerPosition);
-			if (find(visited.begin(), visited.end(), neighbors[neighborIndex]) == visited.end() && 
-				find(neighborBugDirections.begin(), neighborBugDirections.end(), neighborOffset) == neighborBugDirections.end()) {
-				Grid* newGrid = curr_grid->copy();
-				newGrid->players[playerID]->x = neighbors[neighborIndex].x;
-				newGrid->players[playerID]->y = neighbors[neighborIndex].y;
-				grid_Q.push(newGrid);
-				vector<Point> newPath = curr_path;
-				newPath.push_back(neighbors[neighborIndex]);
-				path_Q.push(newPath);
-				enemyPath_Q.push(curr_enemyPath);
-				bugPath_Q.push(curr_bugPath);
-			}
-		}
-		delete curr_grid;
-		*/
 	}
 	return vector<Point>();
 }
@@ -1512,4 +1043,287 @@ vector<Point> findClosestItem(Grid* grid, int playerID) {
 		delete curr_grid;
 	}
 	return vector<Point>();
+}
+
+void wall_character(Grid* grid, int x, int y) {
+	char surroundings = 0;
+	int dx[4] = { 0,1,0,-1 };
+	int dy[4] = { -1,0,1,0 };
+	for (int d = 0; d < 4; ++d) {
+		if (x + dx[d] < 0 || x + dx[d] > 19 ||
+			y + dy[d] < 0 || y + dy[d] > 13)
+			surroundings = surroundings | 1 << d;
+		else
+			surroundings = surroundings | (walls[x + dx[d]][y + dy[d]]) << d;
+	}
+	switch (surroundings) {
+	case (char)0b00000000:
+		cerr << " - ";
+		return;
+	case (char)0b00000001:
+		cerr << " ' ";
+		return;
+	case (char)0b00000010:
+		cerr << " --";
+		return;
+	case (char)0b00000011:
+		cerr << " '-";
+		return;
+	case (char)0b00000100:
+		cerr << " , ";
+		return;
+	case (char)0b00000101:
+		cerr << " | ";
+		return;
+	case (char)0b00000110:
+		cerr << " ,-";
+		return;
+	case (char)0b00000111:
+		cerr << " |-";
+		return;
+	case (char)0b00001000:
+		cerr << "-- ";
+		return;
+	case (char)0b00001001:
+		cerr << "-' ";
+		return;
+	case (char)0b00001010:
+		cerr << "---";
+		return;
+	case (char)0b00001011:
+		cerr << "-'-";
+		return;
+	case (char)0b00001100:
+		cerr << "-, ";
+		return;
+	case (char)0b00001101:
+		cerr << "-| ";
+		return;
+	case (char)0b00001110:
+		cerr << "-,-";
+		return;
+	case (char)0b00001111:
+		cerr << "-|-";
+		return;
+	}
+	/*
+	switch (surroundings) {
+	case (char)0b00000000:
+	cerr << "|||";
+	return;
+	case (char)0b00000001:
+	cerr << "|_|";
+	return;
+	case (char)0b00000010:
+	cerr << "|--";
+	return;
+	case (char)0b00000011:
+	cerr << "|__";
+	return;
+	case (char)0b00000100:
+	cerr << "|^|";
+	return;
+	case (char)0b00000101:
+	cerr << "| |";
+	return;
+	case (char)0b00000110:
+	cerr << "|^^";
+	return;
+	case (char)0b00000111:
+	cerr << "|  ";
+	return;
+	case (char)0b00001000:
+	cerr << "--|";
+	return;
+	case (char)0b00001001:
+	cerr << "__|";
+	return;
+	case (char)0b00001010:
+	cerr << "---";
+	return;
+	case (char)0b00001011:
+	cerr << "___";
+	return;
+	case (char)0b00001100:
+	cerr << "^^|";
+	return;
+	case (char)0b00001101:
+	cerr << "  |";
+	return;
+	case (char)0b00001110:
+	cerr << "^^^";
+	return;
+	case (char)0b00001111:
+	cerr << "   ";
+	return;
+	}
+	*/
+	/*
+	switch (surroundings) {
+	case (char)0b00000000:
+	cerr << " - ";
+	return;
+	case (char)0b00000001:
+	cerr << " ' ";
+	return;
+	case (char)0b00000010:
+	cerr << " --";
+	return;
+	case (char)0b00000011:
+	cerr << " '-";
+	return;
+	case (char)0b00000100:
+	cerr << " , ";
+	return;
+	case (char)0b00000101:
+	cerr << " | ";
+	return;
+	case (char)0b00000110:
+	cerr << " ,-";
+	return;
+	case (char)0b00000111:
+	cerr << " |-";
+	return;
+	case (char)0b00001000:
+	cerr << "-- ";
+	return;
+	case (char)0b00001001:
+	cerr << "-' ";
+	return;
+	case (char)0b00001010:
+	cerr << "---";
+	return;
+	case (char)0b00001011:
+	cerr << "-'-";
+	return;
+	case (char)0b00001100:
+	cerr << "-, ";
+	return;
+	case (char)0b00001101:
+	cerr << "-| ";
+	return;
+	case (char)0b00001110:
+	cerr << "-,-";
+	return;
+	case (char)0b00001111:
+	cerr << "-|-";
+	return;
+	}
+	*/
+	/*
+	switch (surroundings) {
+	case (char)0b00000000:
+	cerr << " " << (unsigned char)205 << ' ';
+	return;
+	case (char)0b00000001:
+	cerr << " " << (unsigned char)202 << ' ';
+	return;
+	case (char)0b00000010:
+	cerr << " " << (unsigned char)205 << (unsigned char)205;
+	return;
+	case (char)0b00000011:
+	cerr << " " << (unsigned char)200 << (unsigned char)205;
+	return;
+	case (char)0b00000100:
+	cerr << " " << (unsigned char)203 << ' ';
+	return;
+	case (char)0b00000101:
+	cerr << " " << (unsigned char)186 << ' ';
+	return;
+	case (char)0b00000110:
+	cerr << " " << (unsigned char)201 << (unsigned char)205;
+	return;
+	case (char)0b00000111:
+	cerr << " " << (unsigned char)204 << (unsigned char)205;
+	return;
+	case (char)0b00001000:
+	cerr << (unsigned char)205 << (unsigned char)205 << ' ';
+	return;
+	case (char)0b00001001:
+	cerr << (unsigned char)205 << (unsigned char)188 << ' ';
+	return;
+	case (char)0b00001010:
+	cerr << (unsigned char)205 << (unsigned char)205 << (unsigned char)205;
+	return;
+	case (char)0b00001011:
+	cerr << (unsigned char)205 << (unsigned char)202 << (unsigned char)205;
+	return;
+	case (char)0b00001100:
+	cerr << (unsigned char)205 << (unsigned char)187 << ' ';
+	return;
+	case (char)0b00001101:
+	cerr << (unsigned char)205 << (unsigned char)185 << ' ';
+	return;
+	case (char)0b00001110:
+	cerr << (unsigned char)205 << (unsigned char)203 << (unsigned char)205;
+	return;
+	case (char)0b00001111:
+	cerr << (unsigned char)205 << (unsigned char)206 << (unsigned char)205;
+	return;
+	}
+	*/
+}
+
+void printGrid(Grid* grid, vector<vector<Point>> items, vector<char> icons, int indent) {
+	for (int i = 0; i < indent; ++i)
+		cerr << "   ";
+	cerr << grid->round << endl;
+	for (int i = 0; i < indent; ++i)
+		cerr << "   ";
+	for (int x = -1; x<21; ++x)
+		wall_character(grid, x, -1);
+	cerr << endl;
+	for (int i = 0; i < indent; ++i)
+		cerr << "   ";
+	for (int y = 0; y < 14; ++y) {
+		wall_character(grid, -1, y);
+		for (int x = 0; x < 20; ++x) {
+			vector<Point>::iterator it = find(grid->bugs.begin(), grid->bugs.end(), Point(x, y));
+			if (it != grid->bugs.end()) {
+				if (walls[x][y])
+					cerr << "-";
+				else
+					cerr << " ";
+				switch (grid->bug_directions[it - grid->bugs.begin()]) {
+				case 0:
+					cerr << "E^";
+					break;
+				case 1:
+					cerr << "E>";
+					break;
+				case 2:
+					cerr << "Ev";
+					break;
+				case 3:
+					cerr << "E<";
+					break;
+				default:
+					if (walls[x][y])
+						cerr << "E-";
+					else
+						cerr << "E ";
+					break;
+				}
+			} else if (walls[x][y])
+				wall_character(grid, x, y);
+			else {
+				int iconCount = 0;
+				for (int i = 0; i < items.size() && iconCount < 3; ++i) {
+					if (find(items[i].begin(), items[i].end(), Point(x, y)) != items[i].end()) {
+						cerr << icons[i];
+						iconCount++;
+					}
+				}
+				for (int i = 0; i < 3 - iconCount; ++i)
+					cerr << " ";
+			}
+		}
+		wall_character(grid, 20, y);
+		cerr << endl;
+		for (int i = 0; i < indent; ++i)
+			cerr << "   ";
+	}
+	for (int x = -1; x<21; ++x)
+		wall_character(grid, x, 14);
+	cerr << endl;
 }

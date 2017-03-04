@@ -8,5 +8,10 @@ public:
 	int snippets;
 	bool has_weapon;
 	bool is_paralyzed;
+	Player() {};
+	Player(int x, int y) {
+		this->x = x;
+		this->y = y;
+	}
 };
 #endif

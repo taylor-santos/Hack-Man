@@ -203,7 +203,6 @@ void do_move(Grid* grid) {
 			cout << "pass" << endl;
 			break;
 		}
-	/*
 	} else {
 		int enemyIndex = index[grid->players[!myID]->x][grid->players[!myID]->y];
 		int optimalIndex = optimalPositions[enemyIndex];
@@ -422,7 +421,7 @@ void do_move(Grid* grid) {
 			}
 		}
 	}
-	*/
+	/*
 	} else {
 		int myIndex = index[grid->players[myID]->x][grid->players[myID]->y];
 		cerr << "No optimal path found." << endl;
@@ -586,6 +585,7 @@ void do_move(Grid* grid) {
 			}
 		}
 	}
+	*/
 	/*
 	for (int x = -1; x<21; ++x)
 		wall_character(grid, x, -1);
