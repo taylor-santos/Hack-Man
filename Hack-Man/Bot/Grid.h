@@ -11,7 +11,7 @@ class Grid {
 	int h;
 public:
 	int round;
-	Player* players[2];
+	Player players[2];
 	vector<Point> snippets;
 	vector<Point> weapons;
 	vector<Point> bugs;

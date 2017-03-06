@@ -11,11 +11,11 @@ Grid* Grid::copy() {
 	newGrid->snippets = snippets;
 	newGrid->weapons = weapons;
 	for (int i = 0; i < 2; ++i) {
-		newGrid->players[i]->x = players[i]->x;
-		newGrid->players[i]->y = players[i]->y;
-		newGrid->players[i]->snippets = players[i]->snippets;
-		newGrid->players[i]->has_weapon = players[i]->has_weapon;
-		newGrid->players[i]->is_paralyzed = players[i]->is_paralyzed;
+		newGrid->players[i].x = players[i].x;
+		newGrid->players[i].y = players[i].y;
+		newGrid->players[i].snippets = players[i].snippets;
+		newGrid->players[i].has_weapon = players[i].has_weapon;
+		newGrid->players[i].is_paralyzed = players[i].is_paralyzed;
 	}
 	return newGrid;
 	/*
@@ -30,21 +30,24 @@ Grid* Grid::copy() {
 		newGrid->bug_directions.push_back(this->bug_directions[i]);
 	}
 	for (int i = 0; i < 2; ++i) {
-		newGrid->players[i]->x = players[i]->x;
-		newGrid->players[i]->y = players[i]->y;
-		newGrid->players[i]->snippets = players[i]->snippets;
-		newGrid->players[i]->has_weapon = players[i]->has_weapon;
-		newGrid->players[i]->is_paralyzed = players[i]->is_paralyzed;
+		newGrid->players[i].x = players[i].x;
+		newGrid->players[i].y = players[i].y;
+		newGrid->players[i].snippets = players[i].snippets;
+		newGrid->players[i].has_weapon = players[i].has_weapon;
+		newGrid->players[i].is_paralyzed = players[i].is_paralyzed;
 	}
 	*/
 	return newGrid;
 }
 
 void Grid::reset() {
-	delete players[0];
-	delete players[1];
-	players[0] = new Player();
-	players[1] = new Player();
+	for (int player = 0; player < 2; ++player) {
+		players[player].has_weapon = false;
+		players[player].is_paralyzed = false;
+		players[player].snippets = 0;
+		players[player].x = -1;
+		players[player].y = -1;
+	}
 	snippets.clear();
 	weapons.clear();
 	bugs.clear();
@@ -53,10 +56,6 @@ void Grid::reset() {
 Grid::Grid(int width, int height) {
 	w = width;
 	h = height;
-	players[0] = new Player();
-	players[1] = new Player();
 }
 Grid::~Grid() {
-	delete players[0];
-	delete players[1];
 }
