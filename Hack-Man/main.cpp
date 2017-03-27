@@ -210,81 +210,65 @@ void do_move(Grid* grid) {
 		for (int weapIndex = 0; weapIndex < grid->weapons.size(); ++weapIndex)
 			targetPoints.push_back(grid->weapons[weapIndex]);
 	}
-	vector<vector<Point>> myPaths;
-	vector<vector<Point>> enemyPaths;
-	cerr << "Possible paths:" << endl;
-	for (int targetIndex = 0; targetIndex < targetPoints.size(); ++targetIndex) {
-		Grid* newGrid = grid->copy();
-		vector<Point> pathToTarget = bestPathToPoint(&newGrid, targetPoints[targetIndex], myID, 1);
-		vector<Point> enemyPathToTarget = bestPathToPoint(&newGrid, targetPoints[targetIndex], !myID, -1);
-		//vector<Point> pathToTarget = shortestPathAroundBugsToPoint(newGrid, targetPoints[targetIndex], myID);
-		//vector<Point> enemyPathToTarget = shortestPathAroundBugsToPoint(newGrid, targetPoints[targetIndex], !myID);
-		bool playersOverlap = false;
-		if (newGrid->players[!myID].has_weapon) {
-			for (int i = 1; i < pathToTarget.size() && i < enemyPathToTarget.size(); ++i) {
-				if (enemyPathToTarget[i] == pathToTarget[i] || (enemyPathToTarget[i] == pathToTarget[i - 1] && pathToTarget[i] == enemyPathToTarget[i - 1])) {
-					playersOverlap = true;
+
+	vector<Point> nextPath;
+	vector<Point> enemyPath;
+	enemyPath.push_back(grid->players[!myID]);
+	Grid* currGrid = grid->copy();
+	int currLength = 0;
+	bool foundPath = false;
+	do {
+		nextPath = closestItemAroundBugs(&currGrid, !myID);
+		enemyPath.insert(enemyPath.end(), nextPath.begin(), nextPath.end());
+		currLength += nextPath.size();
+		if (nextPath.size() > 0) {
+			vector<Point> playerPath = shortestPathAroundBugsToPoint(grid, nextPath.back(), myID);
+			if (playerPath.size() > 0 && playerPath.size() < currLength) {
+				cerr << playerPath.size() << " < " << currLength << endl;
+				int offset = is_adjacent((Point)grid->players[myID], playerPath[0]);
+				switch (offset) {
+				case 0:
+					cerr << "up." << endl;
+					cout << "up" << endl;
 					break;
+				case 1:
+					cerr << "right." << endl;
+					cout << "right" << endl;
+					break;
+				case 2:
+					cerr << "down." << endl;
+					cout << "down" << endl;
+					break;
+				case 3:
+					cerr << "left." << endl;
+					cout << "left" << endl;
+					break;
+				default:
+					cerr << "pass." << endl;
+					cout << "pass" << endl;
+					break;
+				}
+				foundPath = true;
+				break;
+			} else {
+				cerr << playerPath.size() << " > " << currLength << endl;
+				vector<Point>::iterator itemIt = find(targetPoints.begin(), targetPoints.end(), nextPath.back());
+				if (itemIt != targetPoints.end()) {
+					targetPoints.erase(itemIt);
 				}
 			}
 		}
-		if (!playersOverlap) {
-			if (pathToTarget.size() > 0 || enemyPathToTarget.size() > 0) {
-				myPaths.push_back(pathToTarget);
-				enemyPaths.push_back(enemyPathToTarget);
+	} while (nextPath.size() > 0);
+	if (!foundPath) {
+		vector<Point> bestPath;
+		for (int i = 0; i < targetPoints.size(); ++i) {
+			vector<Point> playerPath = shortestPathAroundBugsToPoint(grid, targetPoints[i], myID);
+			if (playerPath.size() > 0 && (playerPath.size() < bestPath.size() || bestPath.size() == 0)) {
+				bestPath = playerPath;
 			}
 		}
-	}
-	int bestPathIndex = -1;
-	int bestPathLength = INT_MAX;
-	for (int i = 0; i < myPaths.size(); ++i) {
-		if (enemyPaths[i].size() == 0) {
-			if (myPaths[i].size() < bestPathLength) {
-				bestPathIndex = i;
-				bestPathLength = myPaths[i].size();
-			}
-		} else if (myPaths[i].size() > 0) {
-			if (myPaths[i].size() <= enemyPaths[i].size() && myPaths.size() < bestPathLength) {
-				bestPathIndex = i;
-				bestPathLength = myPaths[i].size();
-			}
-		}
-	}
-	if (bestPathIndex != -1) {
-		cerr << "Chose path #" << bestPathIndex << ", with length " << bestPathLength << endl << "Output: ";
-		int offset = is_adjacent((Point)grid->players[myID], myPaths[bestPathIndex][1]);
-		switch (offset) {
-		case 0:
-			cerr << "up." << endl;
-			cout << "up" << endl;
-			break;
-		case 1:
-			cerr << "right." << endl;
-			cout << "right" << endl;
-			break;
-		case 2:
-			cerr << "down." << endl;
-			cout << "down" << endl;
-			break;
-		case 3:
-			cerr << "left." << endl;
-			cout << "left" << endl;
-			break;
-		default:
-			cerr << "pass." << endl;
-			cout << "pass" << endl;
-			break;
-		}
-	} else {
-		cerr << "No path to any item. Looking for path to optimal position on board." << endl;
-		int enemyIndex = index[grid->players[!myID].x][grid->players[!myID].y];
-		int optimalPositionIndex = optimalPositions[enemyIndex];
-		Point optimalPoint = Point(coordinate[optimalPositionIndex][0], coordinate[optimalPositionIndex][1]);
-		Grid* newGrid = grid->copy();
-		vector<Point> pathToTarget = bestPathToPoint(&newGrid, optimalPoint, myID, 1);
-		if (pathToTarget.size() > 1) {
-			cerr << "Found optimal positioning. Output: ";
-			int offset = is_adjacent((Point)grid->players[myID], pathToTarget[1]);
+		if (bestPath.size() > 0) {
+			int offset = is_adjacent((Point)grid->players[myID], bestPath[0]);
 			switch (offset) {
 			case 0:
 				cerr << "up." << endl;
@@ -308,19 +292,9 @@ void do_move(Grid* grid) {
 				break;
 			}
 		} else {
-			cerr << "No path to optimal position. Looking for bug-free path to nearest item." << endl;
-			vector<Point> bestPath;
-			int shortestPathLength = INT_MAX;
-			for (int targetIndex = 0; targetIndex < targetPoints.size(); ++targetIndex) {
-				vector<Point> pathToTarget = shortestPathAroundBugsToPoint(grid, targetPoints[targetIndex], myID);
-				if (pathToTarget.size() > 0 && pathToTarget.size() < shortestPathLength) {
-					bestPath = pathToTarget;
-					shortestPathLength = pathToTarget.size();
-				}
-			}
-			if (bestPath.size() > 1) {
-				cerr << "Found path around bugs to nearest item. Output: ";
-				int offset = is_adjacent((Point)grid->players[myID], bestPath[1]);
+			vector<Point> optimalPath = optimalPathGivenEnemyPath(grid, enemyPath, myID);
+			if (optimalPath.size() > 1) {
+				int offset = is_adjacent((Point)grid->players[myID], optimalPath[1]);
 				switch (offset) {
 				case 0:
 					cerr << "up." << endl;
@@ -344,208 +318,8 @@ void do_move(Grid* grid) {
 					break;
 				}
 			} else {
-				cerr << "No path available to any item around bugs. Looking for adjacent bugs." << endl;
-				bool adjacentBugs[4] = { false, false, false, false };
-				int adjacentEnemy = -1;
-				for (int bugIt = 0; bugIt < grid->bugs.size(); ++bugIt) {
-					int bugDir = grid->bug_directions[bugIt];
-					int bugIndex = index[grid->bugs[bugIt].x][grid->bugs[bugIt].y];
-					if (bugIndex == -1) {
-						int pathLength = path_lengths[bugIndex][myIndex];
-						if (pathLength == 1) {
-							int offset = is_adjacent((Point)grid->players[myID], grid->bugs[bugIt]);
-							if (offset != -1)
-								adjacentBugs[offset] = true;
-						} else if (pathLength == 2) {
-							int offset = paths[bugIndex][myIndex];
-							Point offsetBug = offsetPoint(grid->bugs[bugIt], offset);
-							offset = is_adjacent((Point)grid->players[myID], offsetBug);
-							if (offset != -1)
-								adjacentBugs[offset] = true;
-						}
-					} else {
-						int pathLength = path_lengths_with_direction[bugDir][bugIndex][myIndex];
-						if (pathLength == 1) {
-							int offset = is_adjacent((Point)grid->players[myID], grid->bugs[bugIt]);
-							if (offset != -1)
-								adjacentBugs[offset] = true;
-						} else if (pathLength == 2) {
-							int offset = paths_with_direction[bugDir][bugIndex][myIndex];
-							Point offsetBug = offsetPoint(grid->bugs[bugIt], offset);
-							offset = is_adjacent((Point)grid->players[myID], offsetBug);
-							if (offset != -1)
-								adjacentBugs[offset] = true;
-						}
-					}
-				}
-				if (grid->players[!myID].has_weapon) {
-					int pathLength = path_lengths[enemyIndex][myIndex];
-					if (pathLength == 1) {
-						int offset = is_adjacent((Point)grid->players[myID], (Point)grid->players[!myID]);
-						if (offset != -1)
-							adjacentEnemy = offset;
-					} else if (pathLength == 2) {
-						int offset = paths[enemyIndex][myIndex];
-						Point offsetEnemy = offsetPoint((Point)grid->players[!myID], offset);
-						offset = is_adjacent((Point)grid->players[myID], offsetEnemy);
-						if (offset != -1)
-							adjacentEnemy = offset;
-					}
-				}
-				vector<Point> neighbors = getAdjacentCells(grid, (Point)grid->players[myID]);
-				bool foundNeighbor = false;
-				for (int i = 0; i < neighbors.size(); ++i) {
-					int offset = is_adjacent((Point)grid->players[myID], neighbors[i]);
-					if (!adjacentBugs[offset] && offset != adjacentEnemy) {
-						foundNeighbor = true;
-						cerr << "Found adjacent position without a bug. Output: ";
-						switch (offset) {
-						case 0:
-							cerr << "up." << endl;
-							cout << "up" << endl;
-							break;
-						case 1:
-							cerr << "right." << endl;
-							cout << "right" << endl;
-							break;
-						case 2:
-							cerr << "down." << endl;
-							cout << "down" << endl;
-							break;
-						case 3:
-							cerr << "left." << endl;
-							cout << "left" << endl;
-							break;
-						default:
-							cerr << "pass." << endl;
-							cout << "pass" << endl;
-							break;
-						}
-						break;
-					}
-				}
-				if (!foundNeighbor) {
-					cerr << "None of the possible moves can avoid a bug! ";
-					int shortestPath = INT_MAX;
-					int offset = -1;
-					for (int targetIt = 0; targetIt < targetPoints.size(); ++targetIt) {
-						int targetIndex = index[targetPoints[targetIt].x][targetPoints[targetIt].y];
-						if (path_lengths[myIndex][targetIndex] < shortestPath && adjacentEnemy != paths[myIndex][targetIndex]) {
-							shortestPath = path_lengths[myIndex][targetIndex];
-							offset = paths[myIndex][targetIndex];
-						}
-					}
-					if (offset != -1) {
-						cerr << "Finding the shortest path to the nearest item. (Will hit a bug!) Output: ";
-						switch (offset) {
-						case 0:
-							cerr << "up." << endl;
-							cout << "up" << endl;
-							break;
-						case 1:
-							cerr << "right." << endl;
-							cout << "right" << endl;
-							break;
-						case 2:
-							cerr << "down." << endl;
-							cout << "down" << endl;
-							break;
-						case 3:
-							cerr << "left." << endl;
-							cout << "left" << endl;
-							break;
-						default:
-							cerr << "pass." << endl;
-							cout << "pass" << endl;
-							break;
-						}
-					} else {
-						int offset = paths[myIndex][optimalPositionIndex];
-						if (offset != adjacentEnemy) {
-							cerr << "Finding the shortest path to the optimal point on board. (Will hit a bug!) Output: ";
-							switch (offset) {
-							case 0:
-								cerr << "up." << endl;
-								cout << "up" << endl;
-								break;
-							case 1:
-								cerr << "right." << endl;
-								cout << "right" << endl;
-								break;
-							case 2:
-								cerr << "down." << endl;
-								cout << "down" << endl;
-								break;
-							case 3:
-								cerr << "left." << endl;
-								cout << "left" << endl;
-								break;
-							default:
-								cerr << "pass." << endl;
-								cout << "pass" << endl;
-								break;
-							}
-						} else {
-							bool foundNeighbor = false;
-							for (int i = 0; i < neighbors.size(); ++i) {
-								int offset = is_adjacent((Point)grid->players[myID], neighbors[i]);
-								if (offset != adjacentEnemy) {
-									foundNeighbor = true;
-									cerr << "No other options available. Choosing first neighbor path that doesn't intersect with weaponized opponent. Output: ";
-									switch (offset) {
-									case 0:
-										cerr << "up." << endl;
-										cout << "up" << endl;
-										break;
-									case 1:
-										cerr << "right." << endl;
-										cout << "right" << endl;
-										break;
-									case 2:
-										cerr << "down." << endl;
-										cout << "down" << endl;
-										break;
-									case 3:
-										cerr << "left." << endl;
-										cout << "left" << endl;
-										break;
-									default:
-										cerr << "pass." << endl;
-										cout << "pass" << endl;
-										break;
-									}
-								}
-								break;
-							}
-							if (!foundNeighbor) {
-								cerr << "No paths exist which avoid the weaponized opponent. Taking first neighbor. Output: ";
-								int offset = is_adjacent((Point)grid->players[myID], neighbors[0]);
-								switch (offset) {
-								case 0:
-									cerr << "up." << endl;
-									cout << "up" << endl;
-									break;
-								case 1:
-									cerr << "right." << endl;
-									cout << "right" << endl;
-									break;
-								case 2:
-									cerr << "down." << endl;
-									cout << "down" << endl;
-									break;
-								case 3:
-									cerr << "left." << endl;
-									cout << "left" << endl;
-									break;
-								default:
-									cerr << "pass." << endl;
-									cout << "pass" << endl;
-									break;
-								}
-							}
-						}
-					}
-				}
+				cerr << "pass." << endl;
+				cout << "pass" << endl;
 			}
 		}
 	}

@@ -37,7 +37,6 @@ vector<Point> bestPathToPoint(Grid** grid, Point pt, int playerID, int printInde
 		int enemyPositionIndex = index[curr_enemyPosition.x][curr_enemyPosition.y];
 
 		//Find Bug Collisions
-		vector<int> neighborBugDirections;
 		vector<int> killedBugs;
 		bool playerKilledByBug = false;
 		for (int bugIndex = 0; bugIndex < curr_grid->bugs.size(); ++bugIndex) {
@@ -151,49 +150,52 @@ vector<Point> bestPathToPoint(Grid** grid, Point pt, int playerID, int printInde
 		if (!newGrid->players[!playerID].is_paralyzed) {
 			int shortestPathLength = INT_MAX;
 			for (int snipIndex = 0; snipIndex < newGrid->snippets.size(); ++snipIndex) {
-				/*
+				
 				int snipPositionIndex = index[newGrid->snippets[snipIndex].x][newGrid->snippets[snipIndex].y];
 				if (path_lengths[enemyPositionIndex][snipPositionIndex] < shortestPathLength) {
 					shortestPathLength = path_lengths[enemyPositionIndex][snipPositionIndex];
 					enemyOffset = paths[enemyPositionIndex][snipPositionIndex];
 				}
-				*/
-				vector<Point> enemyToItem = shortestPathAroundBugsToPoint(newGrid, newGrid->snippets[snipIndex], !playerID);
-				vector<Point> playerToItem = shortestPathAroundBugsToPoint(newGrid, newGrid->snippets[snipIndex], playerID);
+				
+				/*
+				vector<Point> enemyToItem = shortestPathAroundBugsToPoint(&newGrid, newGrid->snippets[snipIndex], !playerID);
+				vector<Point> playerToItem = shortestPathAroundBugsToPoint(&newGrid, newGrid->snippets[snipIndex], playerID);
 				if ((playerToItem.size() == 0 && enemyToItem.size() > 1) || enemyToItem.size() > 1 && enemyToItem.size() <= playerToItem.size() && enemyToItem.size() < shortestPathLength) {
 					shortestPathLength = enemyToItem.size();
 					enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
 				}
+				*/
 			
 			}
 			if (!newGrid->players[!playerID].has_weapon) {
 				for (int weapIndex = 0; weapIndex < newGrid->weapons.size(); ++weapIndex) {
-					/*
+					
 					int weapPositionIndex = index[newGrid->weapons[weapIndex].x][newGrid->weapons[weapIndex].y];
 					if (path_lengths[enemyPositionIndex][weapPositionIndex] < shortestPathLength) {
 						shortestPathLength = path_lengths[enemyPositionIndex][weapPositionIndex];
 						enemyOffset = paths[enemyPositionIndex][weapPositionIndex];
 					}
-					*/
+					/*
 					vector<Point> enemyToItem = shortestPathAroundBugsToPoint(newGrid, newGrid->weapons[weapIndex], !playerID);
 					vector<Point> playerToItem = shortestPathAroundBugsToPoint(newGrid, newGrid->weapons[weapIndex], playerID);
 					if ((playerToItem.size() == 0 && enemyToItem.size() > 1) || enemyToItem.size() > 1 && enemyToItem.size() <= playerToItem.size() && enemyToItem.size() < shortestPathLength) {
 						shortestPathLength = enemyToItem.size();
 						enemyOffset = is_adjacent(curr_enemyPosition, enemyToItem[1]);
 					}
+					*/
 				}
 			}else{
-				/*
 				if (path_lengths[enemyPositionIndex][playerPositionIndex] < shortestPathLength) {
 					shortestPathLength = path_lengths[enemyPositionIndex][playerPositionIndex];
 					enemyOffset = paths[enemyPositionIndex][playerPositionIndex];
 				}
-				*/
+				/*
 				vector<Point> enemyToPlayer = shortestPathAroundBugsToPoint(newGrid, (Point)newGrid->players[playerID], !playerID);
 				if (enemyToPlayer.size() > 1 && enemyToPlayer.size() < shortestPathLength) {
 					shortestPathLength = enemyToPlayer.size();
 					enemyOffset = is_adjacent(curr_enemyPosition, enemyToPlayer[1]);
 				}
+				*/
 			}
 		} else {
 			newGrid->players[!playerID].is_paralyzed = false;
@@ -215,6 +217,7 @@ vector<Point> bestPathToPoint(Grid** grid, Point pt, int playerID, int printInde
 				offset = paths_with_direction[bugDirection][bugPositionIndex][playerPositionIndex];
 			}
 			newGrid->bugs[bugIndex] = offsetPoint(newGrid->bugs[bugIndex], offset);
+			newGrid->bug_directions[bugIndex] = offset;
 			curr_bugPath.push_back(newGrid->bugs[bugIndex]);
 		}
 
@@ -256,14 +259,160 @@ vector<Point> bestPathToPoint(Grid** grid, Point pt, int playerID, int printInde
 	return vector<Point>();
 }
 
+vector<Point> closestItemAroundBugs(Grid** grid, int playerID) {
+	queue<Grid*> grid_Q;
+	queue<vector<Point>> path_Q;
+	vector<Point> visited;
+	grid_Q.push((*grid)->copy());
+	path_Q.push(vector<Point>());
+	queue<vector<Point>> bugPath_Q;
+	bugPath_Q.push(vector<Point>());
+
+	while (grid_Q.size() > 0) {
+		Grid* curr_grid = grid_Q.front();
+		grid_Q.pop();
+		vector<Point> curr_path = path_Q.front();
+		path_Q.pop();
+
+		vector<Point> curr_bugPath = bugPath_Q.front();
+		bugPath_Q.pop();
+
+		Point curr_playerPosition = (Point)curr_grid->players[playerID];
+
+		visited.push_back(curr_playerPosition);
+
+		int playerPositionIndex = index[curr_playerPosition.x][curr_playerPosition.y];
+
+		//Find Bug Collisions
+		vector<int> killedBugs;
+		bool playerKilledByBug = false;
+		for (int bugIndex = 0; bugIndex < curr_grid->bugs.size(); ++bugIndex) {
+			if (curr_grid->bugs[bugIndex] == curr_playerPosition) {
+				if (curr_grid->players[playerID].has_weapon) {
+					curr_grid->players[playerID].has_weapon = false;
+					killedBugs.push_back(bugIndex);
+					continue;
+				} else {
+					playerKilledByBug = true;
+					break;
+				}
+			}
+		}
+		if (playerKilledByBug) {
+			delete curr_grid;
+			continue;
+		}
+		for (int i = killedBugs.size() - 1; i >= 0; --i) { //Iterate from back to front because we are removing using the bugs' indices.
+			curr_grid->bugs.erase(curr_grid->bugs.begin() + killedBugs[i]);
+			curr_grid->bug_directions.erase(curr_grid->bug_directions.begin() + killedBugs[i]);
+		}
+
+		//Find Item Collisions
+		bool foundItem = false;
+		vector<Point>::iterator snipIt = find(curr_grid->snippets.begin(), curr_grid->snippets.end(), curr_playerPosition);
+		if (snipIt != curr_grid->snippets.end()) {
+			curr_grid->players[playerID].snippets++;
+			curr_grid->snippets.erase(snipIt);
+			foundItem = true;
+		}
+		vector<Point>::iterator weapIt = find(curr_grid->weapons.begin(), curr_grid->weapons.end(), curr_playerPosition);
+		if (weapIt != curr_grid->weapons.end()) {
+			curr_grid->players[playerID].has_weapon = true;
+			curr_grid->weapons.erase(weapIt);
+			foundItem = true;
+		}
+
+		if (foundItem) {
+			vector<vector<Point>> items;
+			vector<char> icons;
+
+			vector<Point> playerPos;
+			playerPos.push_back((Point)(*grid)->players[playerID]);
+			vector<Point> enemyPos;
+			enemyPos.push_back((Point)(*grid)->players[!playerID]);
+			vector<Point> snippets = (*grid)->snippets;
+			vector<Point> weapons = (*grid)->weapons;
+
+			items.push_back(playerPos);
+			icons.push_back(playerID == 0 ? 'A' : 'B');
+			items.push_back(enemyPos);
+			icons.push_back(!playerID == 0 ? 'A' : 'B');
+			items.push_back(snippets);
+			icons.push_back('S');
+			items.push_back(weapons);
+			icons.push_back('W');
+			items.push_back(curr_path);
+			icons.push_back(playerID == 0 ? 'a' : 'b');
+			items.push_back(curr_bugPath);
+			icons.push_back('e');
+
+			printGrid((*grid), items, icons, 1);
+			
+			while (grid_Q.size() > 0) {
+				delete grid_Q.front();
+				grid_Q.pop();
+			}
+			delete (*grid);
+			(*grid) = curr_grid;
+			return curr_path;
+		}
+
+		Grid* newGrid = curr_grid->copy();
+
+		//Calculate Bug Movement
+		for (int bugIndex = 0; bugIndex < newGrid->bugs.size(); ++bugIndex) {
+			int bugPositionIndex = index[newGrid->bugs[bugIndex].x][newGrid->bugs[bugIndex].y];
+			int bugDirection = newGrid->bug_directions[bugIndex];
+			int offset = -1;
+			if (bugDirection == -1) {
+				offset = paths[bugPositionIndex][playerPositionIndex];
+			} else {
+				offset = paths_with_direction[bugDirection][bugPositionIndex][playerPositionIndex];
+			}
+			newGrid->bugs[bugIndex] = offsetPoint(newGrid->bugs[bugIndex], offset);
+			newGrid->bug_directions[bugIndex] = offset;
+			curr_bugPath.push_back(newGrid->bugs[bugIndex]);
+		}
+
+		//Create Next Moves
+		vector<Point> neighbors = getAdjacentCells(curr_grid, curr_playerPosition);
+		for (int neighborIndex = 0; neighborIndex < neighbors.size(); ++neighborIndex) {
+			if (find(visited.begin(), visited.end(), neighbors[neighborIndex]) == visited.end()) {
+				Grid* nextGrid = newGrid->copy();
+				nextGrid->round++;
+				nextGrid->players[playerID].x = neighbors[neighborIndex].x;
+				nextGrid->players[playerID].y = neighbors[neighborIndex].y;
+
+				if (find(curr_grid->bugs.begin(), curr_grid->bugs.end(), neighbors[neighborIndex]) != curr_grid->bugs.end()) {
+					vector<Point>::iterator bugIt = find(curr_grid->bugs.begin(), curr_grid->bugs.end(), neighbors[neighborIndex]);
+					if (nextGrid->players[playerID].has_weapon) {
+						nextGrid->bugs.erase(nextGrid->bugs.begin() + (bugIt - curr_grid->bugs.begin()));
+						nextGrid->players[playerID].has_weapon = false;
+					} else {
+						delete nextGrid;
+						continue;
+					}
+				}
+
+				grid_Q.push(nextGrid);
+				vector<Point> newPath = curr_path;
+				newPath.push_back(neighbors[neighborIndex]);
+				path_Q.push(newPath);
+				bugPath_Q.push(curr_bugPath);
+			}
+		}
+		delete newGrid;
+		delete curr_grid;
+	}
+	return vector<Point>();
+}
+
 vector<Point> shortestPathAroundBugsToPoint(Grid* grid, Point pt, int playerID) {
 	queue<Grid*> grid_Q;
 	queue<vector<Point>> path_Q;
 	vector<Point> visited;
 	grid_Q.push(grid->copy());
-	vector<Point> path;
-	path.push_back((Point)grid->players[playerID]);
-	path_Q.push(path);
+	path_Q.push(vector<Point>());
 	queue<vector<Point>> bugPath_Q;
 	bugPath_Q.push(vector<Point>());
 
@@ -320,6 +469,31 @@ vector<Point> shortestPathAroundBugsToPoint(Grid* grid, Point pt, int playerID) 
 		}
 
 		if (curr_playerPosition == pt) {
+			vector<vector<Point>> items;
+			vector<char> icons;
+
+			vector<Point> playerPos;
+			playerPos.push_back((Point)grid->players[playerID]);
+			vector<Point> enemyPos;
+			enemyPos.push_back((Point)grid->players[!playerID]);
+			vector<Point> snippets = grid->snippets;
+			vector<Point> weapons = grid->weapons;
+
+			items.push_back(playerPos);
+			icons.push_back(playerID == 0 ? 'A' : 'B');
+			items.push_back(enemyPos);
+			icons.push_back(!playerID == 0 ? 'A' : 'B');
+			items.push_back(snippets);
+			icons.push_back('S');
+			items.push_back(weapons);
+			icons.push_back('W');
+			items.push_back(curr_path);
+			icons.push_back(playerID == 0 ? 'a' : 'b');
+			items.push_back(curr_bugPath);
+			icons.push_back('e');
+
+			printGrid(grid, items, icons, 2);
+
 			while (grid_Q.size() > 0) {
 				delete grid_Q.front();
 				grid_Q.pop();
@@ -341,6 +515,7 @@ vector<Point> shortestPathAroundBugsToPoint(Grid* grid, Point pt, int playerID) 
 				offset = paths_with_direction[bugDirection][bugPositionIndex][playerPositionIndex];
 			}
 			newGrid->bugs[bugIndex] = offsetPoint(newGrid->bugs[bugIndex], offset);
+			newGrid->bug_directions[bugIndex] = offset;
 			curr_bugPath.push_back(newGrid->bugs[bugIndex]);
 		}
 
@@ -377,6 +552,101 @@ vector<Point> shortestPathAroundBugsToPoint(Grid* grid, Point pt, int playerID) 
 	return vector<Point>();
 }
 
+vector<Point> optimalPathGivenEnemyPath(Grid* grid, vector<Point> enemyPath, int playerID) {
+	if ((grid->round - 1) % 8 == 0) {
+		vector<Point> path = vector<Point>(1);
+		path[0] = grid->players[playerID];
+		return path;
+	}
+	Grid* newGrid = grid->copy();
+	Point playerPosition = grid->players[playerID];
+	int playerPositionIndex = index[grid->players[playerID].x][grid->players[playerID].y];
+
+	vector<int> neighborBugDirections;
+	vector<int> killedBugs;
+	for (int bugIndex = 0; bugIndex < newGrid->bugs.size(); ++bugIndex) {
+		if (newGrid->bugs[bugIndex] == playerPosition) {
+			if (newGrid->players[playerID].has_weapon) {
+				newGrid->players[playerID].has_weapon = false;
+				killedBugs.push_back(bugIndex);
+				continue;
+			} else {
+				delete newGrid;
+				return vector<Point>();
+			}
+		}
+	}
+	for (int i = killedBugs.size() - 1; i >= 0; --i) { //Iterate from back to front because we are removing using the bugs' indices.
+		newGrid->bugs.erase(newGrid->bugs.begin() + killedBugs[i]);
+		newGrid->bug_directions.erase(newGrid->bug_directions.begin() + killedBugs[i]);
+	}
+
+	for (int bugIndex = 0; bugIndex < newGrid->bugs.size(); ++bugIndex) {
+		int bugPositionIndex = index[newGrid->bugs[bugIndex].x][newGrid->bugs[bugIndex].y];
+		int bugDirection = newGrid->bug_directions[bugIndex];
+		int offset = -1;
+		if (bugDirection == -1) {
+			offset = paths[bugPositionIndex][playerPositionIndex];
+		} else {
+			offset = paths_with_direction[bugDirection][bugPositionIndex][playerPositionIndex];
+		}
+		newGrid->bugs[bugIndex] = offsetPoint(newGrid->bugs[bugIndex], offset);
+		newGrid->bug_directions[bugIndex] = offset;
+	}
+
+	vector<Point> neighbors = getAdjacentCells(newGrid, playerPosition);
+	vector<Point> bestPath;
+	int bestVal = 0;
+	vector<Point> newEnemyPath = enemyPath.size() > 1 ? vector<Point>(enemyPath.begin() + 1, enemyPath.end()) : enemyPath; //Copy all but first element of enemyPath
+	for (int neighborIndex = 0; neighborIndex < neighbors.size(); ++neighborIndex) {
+		vector<Point>::iterator bugIt = find(newGrid->bugs.begin(), newGrid->bugs.end(), neighbors[neighborIndex]);
+		Grid* nextGrid = newGrid->copy();
+		if (bugIt != newGrid->bugs.end()) {
+			if (nextGrid->players[playerID].has_weapon) {
+				nextGrid->players[playerID].has_weapon = false;
+				nextGrid->bugs.erase(nextGrid->bugs.begin() + (bugIt - newGrid->bugs.begin()));
+			} else {
+				delete nextGrid;
+				continue;
+			}
+		}
+		
+		bugIt = find(grid->bugs.begin(), grid->bugs.end(), neighbors[neighborIndex]);
+		if (bugIt != grid->bugs.end()) {
+			if (newGrid->bugs[bugIt - grid->bugs.begin()] == playerPosition) {
+				if (nextGrid->players[playerID].has_weapon) {
+					nextGrid->players[playerID].has_weapon = false;
+					nextGrid->bugs.erase(nextGrid->bugs.begin() + (bugIt - grid->bugs.begin()));
+				} else {
+					delete nextGrid;
+					continue;
+				}
+			}
+		}
+		
+		
+		nextGrid->round++;
+		nextGrid->players[playerID].x = neighbors[neighborIndex].x;
+		nextGrid->players[playerID].y = neighbors[neighborIndex].y;
+
+		vector<Point> newPath = optimalPathGivenEnemyPath(nextGrid, newEnemyPath, playerID);
+		if (newPath.size() == 0)
+			continue;
+		Point enemyPos;
+		if (newPath.size() > newEnemyPath.size()) {
+			enemyPos = newEnemyPath.back();
+		} else {
+			enemyPos = newEnemyPath[newPath.size() - 1];
+		}
+		int val = numberOfCloserPoints[index[enemyPos.x][enemyPos.y]][index[newPath.back().x][newPath.back().y]];
+		if (val > bestVal) {
+			bestVal = val;
+			bestPath = newPath;
+		}
+	}
+	bestPath.insert(bestPath.begin(), grid->players[playerID]);
+	return bestPath;
+}
 
 void wall_character(Grid* grid, int x, int y) {
 	char surroundings = 0;
@@ -598,9 +868,6 @@ void wall_character(Grid* grid, int x, int y) {
 }
 
 void printGrid(Grid* grid, vector<vector<Point>> items, vector<char> icons, int indent) {
-	for (int i = 0; i < indent; ++i)
-		cerr << "   ";
-	cerr << grid->round << endl;
 	for (int i = 0; i < indent; ++i)
 		cerr << "   ";
 	for (int x = -1; x<21; ++x)
